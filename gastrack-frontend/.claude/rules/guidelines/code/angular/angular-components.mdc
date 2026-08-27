@@ -1,0 +1,249 @@
+---
+description: Component creation and organization patterns
+---
+
+# Angular Component Guidelines
+
+## Component Structure
+
+### File Organization
+
+```
+component-name/
+├── component-name.component.ts      # Component class + template
+├── component-name.component.spec.ts # Tests
+└── index.ts                         # Barrel export
+```
+
+### Component Class Template
+
+```typescript
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-component-name',
+  standalone: true,
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="component-wrapper">
+      <!-- Template here -->
+    </div>
+  `,
+})
+export class ComponentNameComponent {
+  // Dependencies
+  private readonly service = inject(MyService);
+
+  // Inputs
+  readonly data = input.required<Data>();
+  readonly config = input<Config>({ enabled: true });
+
+  // Outputs
+  readonly selected = output<Data>();
+  readonly deleted = output<string>();
+
+  // Internal signals
+  private readonly isOpenSignal = signal(false);
+  readonly isOpen = this.isOpenSignal.asReadonly();
+
+  // Computed
+  readonly displayName = computed(() => this.data().name.toUpperCase());
+
+  // Methods
+  onSelect(): void {
+    this.selected.emit(this.data());
+  }
+
+  toggle(): void {
+    this.isOpenSignal.update(v => !v);
+  }
+}
+```
+
+## Smart vs Dumb Components
+
+### Smart Component (Container)
+
+Located in `features/*/pages/`
+
+```typescript
+@Component({
+  selector: 'app-cylinders-page',
+  standalone: true,
+  imports: [
+    OxygenTankCardComponent,
+    TankFiltersComponent,
+    LoadingSpinnerComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="p-6">
+      <h1 class="text-2xl font-bold mb-6">Cilindros</h1>
+
+      <app-tank-filters
+        [filters]="filters()"
+        (filtersChange)="onFiltersChange($event)"
+      />
+
+      @if (isLoading()) {
+        <app-loading-spinner />
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (tank of tanks(); track tank.id) {
+            <app-oxygen-tank-card
+              [tank]="tank"
+              (select)="onTankSelect($event)"
+            />
+          } @empty {
+            <p class="col-span-full text-center text-gray-500">
+              Nenhum cilindro encontrado
+            </p>
+          }
+        </div>
+      }
+    </div>
+  `,
+})
+export class CylindersPageComponent {
+  private readonly tankService = inject(OxygenTankService);
+  private readonly router = inject(Router);
+
+  readonly tanks = this.tankService.filteredTanks;
+  readonly isLoading = this.tankService.isLoading;
+  readonly filters = this.tankService.filters;
+
+  onFiltersChange(filters: TankFilters): void {
+    this.tankService.updateFilters(filters);
+  }
+
+  onTankSelect(tank: OxygenTank): void {
+    void this.router.navigate(['/cylinders', tank.id]);
+  }
+}
+```
+
+### Dumb Component (Presentational)
+
+Located in `features/*/components/` or `shared/components/`
+
+```typescript
+@Component({
+  selector: 'app-oxygen-tank-card',
+  standalone: true,
+  imports: [TankStatusBadgeComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div
+      class="p-4 bg-white rounded-lg shadow-sm border border-gray-200
+             hover:shadow-md transition-shadow cursor-pointer"
+      (click)="onSelect()"
+    >
+      <div class="flex justify-between items-start mb-3">
+        <h3 class="font-semibold text-gray-900">{{ tank().device_id }}</h3>
+        <app-tank-status-badge [status]="tank().status" />
+      </div>
+
+      <div class="space-y-2 text-sm text-gray-600">
+        <p>Localização: {{ tank().location }}</p>
+        <p>Pressão: {{ tank().current_pressure_bar }} bar</p>
+      </div>
+    </div>
+  `,
+})
+export class OxygenTankCardComponent {
+  readonly tank = input.required<OxygenTank>();
+  readonly select = output<OxygenTank>();
+
+  onSelect(): void {
+    this.select.emit(this.tank());
+  }
+}
+```
+
+## Input Patterns
+
+### Required vs Optional
+
+```typescript
+// Required - must be provided
+readonly id = input.required<string>();
+
+// Optional - may be undefined
+readonly name = input<string>();
+
+// Optional with default
+readonly variant = input<'primary' | 'secondary'>('primary');
+
+// Transform input
+readonly count = input(0, { transform: numberAttribute });
+```
+
+### Input Validation
+
+```typescript
+readonly size = input.required<'sm' | 'md' | 'lg'>();
+
+// In template
+@switch (size()) {
+  @case ('sm') { <span class="text-sm">Small</span> }
+  @case ('md') { <span class="text-base">Medium</span> }
+  @case ('lg') { <span class="text-lg">Large</span> }
+}
+```
+
+## Output Patterns
+
+```typescript
+// Simple event
+readonly clicked = output<void>();
+
+// With data
+readonly selected = output<Item>();
+
+// Usage
+this.clicked.emit();
+this.selected.emit(item);
+```
+
+## Template Patterns
+
+### Conditional Rendering
+
+```html
+@if (isLoading()) {
+  <app-spinner />
+} @else if (error()) {
+  <app-error [message]="error()" />
+} @else {
+  <app-content />
+}
+```
+
+### Lists
+
+```html
+@for (item of items(); track item.id) {
+  <app-item [data]="item" />
+} @empty {
+  <p>No items</p>
+}
+```
+
+### CSS Classes
+
+```html
+<!-- Static -->
+<div class="p-4 bg-white rounded-lg">
+
+<!-- Dynamic -->
+<div [class]="isActive() ? 'bg-blue-500' : 'bg-gray-200'">
+
+<!-- Multiple conditions -->
+<div
+  class="p-4 rounded"
+  [class.bg-green-500]="status() === 'success'"
+  [class.bg-red-500]="status() === 'error'"
+>
+```

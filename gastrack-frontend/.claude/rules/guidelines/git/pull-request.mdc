@@ -1,0 +1,122 @@
+---
+description: Pull request creation and review guidelines
+---
+
+# Pull Request Guidelines
+
+## PR Title
+
+Follow commit message format:
+
+```
+feat(cylinders): add pressure monitoring dashboard
+fix(auth): resolve token refresh race condition
+```
+
+## PR Template
+
+```markdown
+## Description
+Brief description of what this PR does.
+
+## Changes
+- List of changes made
+- Another change
+- And another
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] E2E tests added/updated
+- [ ] Manual testing performed
+
+## Screenshots (if UI changes)
+Before | After
+--- | ---
+img | img
+
+## Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review performed
+- [ ] No `any` types used
+- [ ] Tests pass locally
+- [ ] `bun run ci:all` passes
+```
+
+## Before Opening PR
+
+### Run Quality Checks
+
+```bash
+# Run all checks
+bun run ci:all
+
+# Individual checks
+bun run lint:all
+bun test
+bun run build
+```
+
+### Self-Review Checklist
+
+- [ ] Code compiles without errors
+- [ ] No console.log or debugging code
+- [ ] No commented-out code
+- [ ] All tests pass
+- [ ] No `any` types
+- [ ] TypeScript strict mode satisfied
+- [ ] Follows Angular patterns (OnPush, signals, inject)
+- [ ] Proper error handling
+
+## PR Size
+
+### Keep PRs Small
+
+- **Ideal**: < 200 lines changed
+- **Maximum**: < 500 lines changed
+- **If larger**: Consider splitting
+
+### Split Strategies
+
+1. **By feature**: Auth login → Auth register
+2. **By layer**: Models → Services → Components
+3. **By step**: Refactor → Add feature → Add tests
+
+## Review Process
+
+### As Author
+
+1. **Fill template completely**
+2. **Add reviewers**
+3. **Respond to feedback promptly**
+4. **Don't force push** during review
+5. **Resolve conversations** when addressed
+
+### As Reviewer
+
+1. **Review within 24h**
+2. **Be constructive**
+3. **Approve when satisfied**
+4. **Block only for serious issues**
+
+## Merge Rules
+
+1. **All checks pass**
+2. **At least 1 approval**
+3. **No unresolved conversations**
+4. **Branch up to date with main**
+
+## Branch Naming
+
+```
+feat/GAS-123-add-cylinder-monitoring
+fix/GAS-456-auth-token-refresh
+refactor/GAS-789-shared-components
+```
+
+Pattern: `type/ticket-short-description`

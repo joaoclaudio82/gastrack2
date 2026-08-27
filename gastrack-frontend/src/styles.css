@@ -1,0 +1,660 @@
+@import 'tailwindcss';
+
+/* =============================================================================
+   GasTrack Design System - Industrial Steel Blue Theme
+
+   Philosophy: Industrial precision, safety, reliability
+   Palette: Steel (primary), Slate (neutral), Semantic status scales
+   Typography: IBM Plex Sans (body) + IBM Plex Mono (code)
+   ============================================================================= */
+
+@theme {
+  /* ---------------------------------------------------------------------------
+     Primary Colors - Steel Blue (Industrial Gas)
+     --------------------------------------------------------------------------- */
+  --color-primary-50: oklch(0.956 0.012 255.51);
+  --color-primary-100: oklch(0.922 0.023 248.06);
+  --color-primary-200: oklch(0.834 0.05 248.41);
+  --color-primary-300: oklch(0.757 0.077 244.19);
+  --color-primary-400: oklch(0.679 0.077 242.55);
+  --color-primary-500: oklch(0.596 0.068 243.53);
+  --color-primary-600: oklch(0.507 0.058 243.94);
+  --color-primary-700: oklch(0.412 0.047 243.64);
+  --color-primary-800: oklch(0.316 0.036 244.4);
+  --color-primary-900: oklch(0.232 0.027 242.36);
+  --color-primary-950: oklch(0.177 0.02 242.52);
+
+  /* ---------------------------------------------------------------------------
+     Steel Scale (hue ~243-255)
+     --------------------------------------------------------------------------- */
+  --color-steel-50: oklch(0.956 0.012 255.51);
+  --color-steel-100: oklch(0.922 0.023 248.06);
+  --color-steel-200: oklch(0.834 0.05 248.41);
+  --color-steel-300: oklch(0.757 0.077 244.19);
+  --color-steel-400: oklch(0.679 0.077 242.55);
+  --color-steel-500: oklch(0.596 0.068 243.53);
+  --color-steel-600: oklch(0.507 0.058 243.94);
+  --color-steel-700: oklch(0.412 0.047 243.64);
+  --color-steel-800: oklch(0.316 0.036 244.4);
+  --color-steel-900: oklch(0.232 0.027 242.36);
+  --color-steel-950: oklch(0.177 0.02 242.52);
+
+  /* ---------------------------------------------------------------------------
+     Slate Scale (hue ~258-266)
+     --------------------------------------------------------------------------- */
+  --color-slate-50: oklch(0.931 0.013 266.73);
+  --color-slate-100: oklch(0.862 0.025 263.33);
+  --color-slate-200: oklch(0.734 0.052 259.76);
+  --color-slate-300: oklch(0.595 0.055 258.68);
+  --color-slate-400: oklch(0.457 0.042 258.81);
+  --color-slate-500: oklch(0.326 0.03 258.34);
+  --color-slate-600: oklch(0.283 0.027 260.02);
+  --color-slate-700: oklch(0.25 0.023 259.33);
+  --color-slate-800: oklch(0.216 0.02 258.34);
+  --color-slate-900: oklch(0.163 0.016 261.49);
+  --color-slate-950: oklch(0.128 0.013 263.62);
+
+  /* ---------------------------------------------------------------------------
+     Critical Scale (hue ~22-33)
+     --------------------------------------------------------------------------- */
+  --color-critical-50: oklch(0.958 0.016 22.18);
+  --color-critical-100: oklch(0.919 0.034 22.38);
+  --color-critical-200: oklch(0.829 0.077 24.83);
+  --color-critical-300: oklch(0.747 0.123 26.48);
+  --color-critical-400: oklch(0.667 0.182 31.07);
+  --color-critical-500: oklch(0.575 0.167 32.09);
+  --color-critical-600: oklch(0.492 0.143 32.45);
+  --color-critical-700: oklch(0.402 0.117 32.04);
+  --color-critical-800: oklch(0.312 0.091 31.88);
+  --color-critical-900: oklch(0.233 0.067 32.34);
+  --color-critical-950: oklch(0.183 0.053 33.33);
+
+  /* ---------------------------------------------------------------------------
+     Warning Scale (hue ~75-87)
+     --------------------------------------------------------------------------- */
+  --color-warning-50: oklch(0.974 0.019 75.32);
+  --color-warning-100: oklch(0.94 0.047 77.64);
+  --color-warning-200: oklch(0.881 0.111 82.28);
+  --color-warning-300: oklch(0.822 0.149 86.35);
+  --color-warning-400: oklch(0.77 0.14 86.39);
+  --color-warning-500: oklch(0.707 0.128 86.03);
+  --color-warning-600: oklch(0.597 0.108 86.06);
+  --color-warning-700: oklch(0.475 0.086 85.52);
+  --color-warning-800: oklch(0.363 0.066 86.32);
+  --color-warning-900: oklch(0.25 0.046 87.27);
+  --color-warning-950: oklch(0.198 0.036 84.91);
+
+  /* ---------------------------------------------------------------------------
+     Success Scale (hue ~155)
+     --------------------------------------------------------------------------- */
+  --color-success-50: oklch(0.961 0.047 155.8);
+  --color-success-100: oklch(0.919 0.101 155.9);
+  --color-success-200: oklch(0.836 0.144 155.74);
+  --color-success-300: oklch(0.77 0.132 155.76);
+  --color-success-400: oklch(0.693 0.119 155.49);
+  --color-success-500: oklch(0.623 0.107 155.71);
+  --color-success-600: oklch(0.523 0.089 156.13);
+  --color-success-700: oklch(0.431 0.074 155.25);
+  --color-success-800: oklch(0.33 0.056 155.92);
+  --color-success-900: oklch(0.236 0.041 155.83);
+  --color-success-950: oklch(0.185 0.033 154.2);
+
+  /* ---------------------------------------------------------------------------
+     Info Scale (hue ~249-259)
+     --------------------------------------------------------------------------- */
+  --color-info-50: oklch(0.956 0.014 258.36);
+  --color-info-100: oklch(0.913 0.029 259.59);
+  --color-info-200: oklch(0.828 0.06 255.48);
+  --color-info-300: oklch(0.74 0.094 251.51);
+  --color-info-400: oklch(0.654 0.105 249.32);
+  --color-info-500: oklch(0.566 0.091 249.72);
+  --color-info-600: oklch(0.481 0.077 249.71);
+  --color-info-700: oklch(0.396 0.064 249.74);
+  --color-info-800: oklch(0.31 0.051 249.77);
+  --color-info-900: oklch(0.225 0.036 249.69);
+  --color-info-950: oklch(0.178 0.028 249.03);
+
+  /* ---------------------------------------------------------------------------
+     Semantic Colors (for Tailwind utility classes)
+     --------------------------------------------------------------------------- */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* ---------------------------------------------------------------------------
+     Font Family
+     --------------------------------------------------------------------------- */
+  --font-sans:
+    'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---------------------------------------------------------------------------
+     Radius Scale - Industrial (tight, precise)
+     --------------------------------------------------------------------------- */
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-full: 9999px;
+
+  /* ---------------------------------------------------------------------------
+     Shadows - oklch-based
+     --------------------------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 4%);
+  --shadow-md: 0 2px 6px -1px oklch(0 0 0 / 8%);
+  --shadow-lg: 0 8px 16px -4px oklch(0 0 0 / 12%);
+  --shadow-xl: 0 16px 32px -8px oklch(0 0 0 / 16%);
+
+  /* ---------------------------------------------------------------------------
+     Typography Scale
+     --------------------------------------------------------------------------- */
+  --text-overline: 0.6875rem;
+  --text-caption: 0.75rem;
+  --text-label: 0.8125rem;
+  --text-body: 0.875rem;
+  --text-body-lg: 0.9375rem;
+  --text-section: 1rem;
+  --text-title: 1.125rem;
+  --text-page: 1.25rem;
+  --text-display: 1.5rem;
+
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* Letter Spacing */
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.04em;
+}
+
+/* =============================================================================
+   CSS Custom Properties - Design Tokens
+   ============================================================================= */
+
+:root {
+  /* ===========================================================================
+     Light Mode - Industrial Steel Theme
+     =========================================================================== */
+
+  /* Base */
+  --background: oklch(0.945 0.008 260);
+  --foreground: oklch(0.326 0.03 258.34);
+
+  /* Surfaces */
+  --card: oklch(0.99 0.003 260);
+  --card-foreground: oklch(0.326 0.03 258.34);
+  --popover: oklch(0.99 0.003 260);
+  --popover-foreground: oklch(0.326 0.03 258.34);
+
+  /* Primary - Steel Blue */
+  --primary: oklch(0.596 0.068 243.53);
+  --primary-foreground: oklch(0.99 0.003 260);
+
+  /* Secondary */
+  --secondary: oklch(0.931 0.013 266.73);
+  --secondary-foreground: oklch(0.326 0.03 258.34);
+
+  /* Muted */
+  --muted: oklch(0.931 0.013 266.73);
+  --muted-foreground: oklch(0.52 0.055 258.68);
+
+  /* Accent */
+  --accent: oklch(0.956 0.012 255.51);
+  --accent-foreground: oklch(0.326 0.03 258.34);
+
+  /* Semantic States */
+  --destructive: oklch(0.575 0.167 32.09);
+  --destructive-foreground: oklch(0.958 0.016 22.18);
+  --warning: oklch(0.707 0.128 86.03);
+  --warning-foreground: oklch(0.25 0.046 87.27);
+  --success: oklch(0.623 0.107 155.71);
+  --success-foreground: oklch(0.185 0.033 154.2);
+  --info: oklch(0.566 0.091 249.72);
+  --info-foreground: oklch(0.178 0.028 249.03);
+
+  /* Borders & Inputs */
+  --border: oklch(0.862 0.025 263.33);
+  --input: oklch(0.862 0.025 263.33);
+  --ring: oklch(0.596 0.068 243.53);
+
+  --radius: 4px;
+
+  /* ---------------------------------------------------------------------------
+     Spacing Scale
+     --------------------------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ---------------------------------------------------------------------------
+     Status Colors - General (Light Mode)
+     --------------------------------------------------------------------------- */
+  --color-success: oklch(0.623 0.107 155.71);
+  --color-success-bg: oklch(0.961 0.047 155.8);
+  --color-success-text: oklch(0.236 0.041 155.83);
+
+  --color-warning: oklch(0.707 0.128 86.03);
+  --color-warning-bg: oklch(0.974 0.019 75.32);
+  --color-warning-text: oklch(0.25 0.046 87.27);
+
+  --color-danger: oklch(0.575 0.167 32.09);
+  --color-danger-bg: oklch(0.958 0.016 22.18);
+  --color-danger-text: oklch(0.233 0.067 32.34);
+
+  --color-info: oklch(0.566 0.091 249.72);
+  --color-info-bg: oklch(0.956 0.014 258.36);
+  --color-info-text: oklch(0.225 0.036 249.69);
+
+  /* ---------------------------------------------------------------------------
+     Tank Status Colors (Light Mode)
+     --------------------------------------------------------------------------- */
+
+  /* Full - Success green */
+  --color-tank-full: oklch(0.523 0.089 156.13);
+  --color-tank-full-bg: oklch(0.961 0.047 155.8);
+  --color-tank-full-text: oklch(0.236 0.041 155.83);
+
+  /* Normal - Info blue */
+  --color-tank-normal: oklch(0.481 0.077 249.71);
+  --color-tank-normal-bg: oklch(0.956 0.014 258.36);
+  --color-tank-normal-text: oklch(0.225 0.036 249.69);
+
+  /* Low - Warning amber */
+  --color-tank-low: oklch(0.597 0.108 86.06);
+  --color-tank-low-bg: oklch(0.974 0.019 75.32);
+  --color-tank-low-text: oklch(0.25 0.046 87.27);
+
+  /* Critical - Critical red */
+  --color-tank-critical: oklch(0.492 0.143 32.45);
+  --color-tank-critical-bg: oklch(0.958 0.016 22.18);
+  --color-tank-critical-text: oklch(0.233 0.067 32.34);
+
+  /* Empty - Neutral slate */
+  --color-tank-empty: oklch(0.595 0.055 258.68);
+  --color-tank-empty-bg: oklch(0.931 0.013 266.73);
+  --color-tank-empty-text: oklch(0.216 0.02 258.34);
+
+  /* ---------------------------------------------------------------------------
+     Neutral Text Colors (Light Mode)
+     --------------------------------------------------------------------------- */
+  --color-text-primary: oklch(0.326 0.03 258.34);
+  --color-text-secondary: oklch(0.457 0.042 258.81);
+  --color-text-muted: oklch(0.595 0.055 258.68);
+  --color-text-placeholder: oklch(0.734 0.052 259.76);
+
+  /* ---------------------------------------------------------------------------
+     Surface Colors (Light Mode)
+     --------------------------------------------------------------------------- */
+  --color-surface: oklch(0.99 0.003 260);
+  --color-border-dark: oklch(0.734 0.052 259.76);
+
+  /* ---------------------------------------------------------------------------
+     Z-Index Scale
+     --------------------------------------------------------------------------- */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ---------------------------------------------------------------------------
+     Transitions
+     --------------------------------------------------------------------------- */
+  --transition-fast: 100ms;
+  --transition-normal: 150ms;
+  --transition-slow: 200ms;
+
+  /* ---------------------------------------------------------------------------
+     Component Sizes
+     --------------------------------------------------------------------------- */
+  --button-height-sm: 2rem;
+  --button-height-md: 2.25rem;
+  --button-height-lg: 2.5rem;
+  --input-height-sm: 2rem;
+  --input-height-md: 2.25rem;
+  --input-height-lg: 2.5rem;
+
+  /* ---------------------------------------------------------------------------
+     Table Row Heights
+     --------------------------------------------------------------------------- */
+  --table-row-compact: 2rem;
+  --table-row-default: 2.25rem;
+  --table-row-relaxed: 2.75rem;
+}
+
+.dark {
+  /* ===========================================================================
+     Dark Mode - Industrial Charcoal Theme
+     =========================================================================== */
+
+  /* Base */
+  --background: oklch(0.163 0.016 261.49);
+  --foreground: oklch(0.862 0.025 263.33);
+
+  /* Surfaces */
+  --card: oklch(0.216 0.02 258.34);
+  --card-foreground: oklch(0.862 0.025 263.33);
+  --popover: oklch(0.216 0.02 258.34);
+  --popover-foreground: oklch(0.862 0.025 263.33);
+
+  /* Primary - Lighter Steel for dark mode */
+  --primary: oklch(0.679 0.077 242.55);
+  --primary-foreground: oklch(0.163 0.016 261.49);
+
+  /* Secondary */
+  --secondary: oklch(0.25 0.023 259.33);
+  --secondary-foreground: oklch(0.862 0.025 263.33);
+
+  /* Muted */
+  --muted: oklch(0.25 0.023 259.33);
+  --muted-foreground: oklch(0.595 0.055 258.68);
+
+  /* Accent */
+  --accent: oklch(0.283 0.027 260.02);
+  --accent-foreground: oklch(0.862 0.025 263.33);
+
+  /* Semantic States - Adjusted for dark mode */
+  --destructive: oklch(0.667 0.182 31.07);
+  --destructive-foreground: oklch(0.183 0.053 33.33);
+  --warning: oklch(0.77 0.14 86.39);
+  --warning-foreground: oklch(0.974 0.019 75.32);
+  --success: oklch(0.693 0.119 155.49);
+  --success-foreground: oklch(0.961 0.047 155.8);
+  --info: oklch(0.654 0.105 249.32);
+  --info-foreground: oklch(0.178 0.028 249.03);
+
+  /* Borders & Inputs */
+  --border: oklch(0.283 0.027 260.02);
+  --input: oklch(0.283 0.027 260.02);
+  --ring: oklch(0.679 0.077 242.55);
+
+  /* ---------------------------------------------------------------------------
+     Status Colors - Dark Mode
+     --------------------------------------------------------------------------- */
+  --color-success: oklch(0.693 0.119 155.49);
+  --color-success-bg: oklch(0.236 0.041 155.83);
+  --color-success-text: oklch(0.961 0.047 155.8);
+
+  --color-warning: oklch(0.77 0.14 86.39);
+  --color-warning-bg: oklch(0.25 0.046 87.27);
+  --color-warning-text: oklch(0.974 0.019 75.32);
+
+  --color-danger: oklch(0.667 0.182 31.07);
+  --color-danger-bg: oklch(0.233 0.067 32.34);
+  --color-danger-text: oklch(0.958 0.016 22.18);
+
+  --color-info: oklch(0.654 0.105 249.32);
+  --color-info-bg: oklch(0.225 0.036 249.69);
+  --color-info-text: oklch(0.956 0.014 258.36);
+
+  /* ---------------------------------------------------------------------------
+     Tank Status Colors - Dark Mode
+     --------------------------------------------------------------------------- */
+
+  /* Full - Success for dark */
+  --color-tank-full: oklch(0.693 0.119 155.49);
+  --color-tank-full-bg: oklch(0.236 0.041 155.83);
+  --color-tank-full-text: oklch(0.961 0.047 155.8);
+
+  /* Normal - Info for dark */
+  --color-tank-normal: oklch(0.654 0.105 249.32);
+  --color-tank-normal-bg: oklch(0.225 0.036 249.69);
+  --color-tank-normal-text: oklch(0.956 0.014 258.36);
+
+  /* Low - Warning for dark */
+  --color-tank-low: oklch(0.77 0.14 86.39);
+  --color-tank-low-bg: oklch(0.25 0.046 87.27);
+  --color-tank-low-text: oklch(0.974 0.019 75.32);
+
+  /* Critical - Critical for dark */
+  --color-tank-critical: oklch(0.667 0.182 31.07);
+  --color-tank-critical-bg: oklch(0.233 0.067 32.34);
+  --color-tank-critical-text: oklch(0.958 0.016 22.18);
+
+  /* Empty - Neutral for dark */
+  --color-tank-empty: oklch(0.595 0.055 258.68);
+  --color-tank-empty-bg: oklch(0.216 0.02 258.34);
+  --color-tank-empty-text: oklch(0.931 0.013 266.73);
+
+  /* ---------------------------------------------------------------------------
+     Neutral Text Colors - Dark Mode
+     --------------------------------------------------------------------------- */
+  --color-text-primary: oklch(0.862 0.025 263.33);
+  --color-text-secondary: oklch(0.734 0.052 259.76);
+  --color-text-muted: oklch(0.595 0.055 258.68);
+  --color-text-placeholder: oklch(0.457 0.042 258.81);
+
+  /* ---------------------------------------------------------------------------
+     Surface Colors - Dark Mode
+     --------------------------------------------------------------------------- */
+  --color-surface: oklch(0.216 0.02 258.34);
+  --color-border-dark: oklch(0.326 0.03 258.34);
+}
+
+/* =============================================================================
+   Base Styles
+   ============================================================================= */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  /* Fix Tailwind CSS 4 color inheritance - headings and paragraphs */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-text-primary);
+  }
+
+  p {
+    color: var(--color-text-secondary);
+  }
+
+  /* Form elements reset */
+  input,
+  textarea,
+  select {
+    @apply appearance-none bg-transparent;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    @apply appearance-auto;
+  }
+
+  /* Focus visible for keyboard navigation - using steel ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    --tw-ring-color: var(--ring);
+  }
+}
+
+/* =============================================================================
+   Custom Utilities
+   ============================================================================= */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Tank status utilities */
+  .tank-status-full {
+    background-color: var(--color-tank-full-bg);
+    color: var(--color-tank-full-text);
+  }
+
+  .tank-status-normal {
+    background-color: var(--color-tank-normal-bg);
+    color: var(--color-tank-normal-text);
+  }
+
+  .tank-status-low {
+    background-color: var(--color-tank-low-bg);
+    color: var(--color-tank-low-text);
+  }
+
+  .tank-status-critical {
+    background-color: var(--color-tank-critical-bg);
+    color: var(--color-tank-critical-text);
+  }
+
+  .tank-status-empty {
+    background-color: var(--color-tank-empty-bg);
+    color: var(--color-tank-empty-text);
+  }
+
+  /* Progress bar colors for tanks */
+  .tank-progress-full {
+    background-color: var(--color-tank-full);
+  }
+
+  .tank-progress-normal {
+    background-color: var(--color-tank-normal);
+  }
+
+  .tank-progress-low {
+    background-color: var(--color-tank-low);
+  }
+
+  .tank-progress-critical {
+    background-color: var(--color-tank-critical);
+  }
+
+  .tank-progress-empty {
+    background-color: var(--color-tank-empty);
+  }
+}
+
+/* =============================================================================
+   Component Styles
+   ============================================================================= */
+
+@layer components {
+  /* CDK Overlay - Full viewport backdrop */
+  .cdk-overlay-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .cdk-overlay-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  .cdk-overlay-transparent-backdrop {
+    background: transparent;
+  }
+
+  .cdk-overlay-connected-position-bounding-box {
+    display: flex;
+    position: fixed;
+    flex-direction: column;
+    z-index: 1000;
+    min-width: 1px;
+    min-height: 1px;
+  }
+
+  .cdk-overlay-pane {
+    position: absolute;
+    z-index: 1000;
+    box-sizing: border-box;
+    pointer-events: auto;
+  }
+
+  /* Card component base */
+  .card {
+    border-color: var(--border);
+    background-color: var(--card);
+
+    @apply rounded-sm shadow-sm border;
+  }
+
+  .card-hoverable {
+    transition-duration: var(--transition-normal);
+
+    @apply hover:shadow-md transition-shadow;
+  }
+
+  /* Badge component base */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Input focus ring - using primary steel */
+  .input-focus {
+    @apply focus:outline-none focus:ring-2 focus:border-primary;
+    --tw-ring-color: oklch(0.596 0.068 243.53 / 50%);
+  }
+
+  .dark .input-focus {
+    --tw-ring-color: oklch(0.679 0.077 242.55 / 50%);
+  }
+}
+
+/* =============================================================================
+   Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

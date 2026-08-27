@@ -1,0 +1,249 @@
+---
+description: TypeScript coding style and conventions
+---
+
+# TypeScript Style Guide
+
+## Type Annotations
+
+### Always Specify Types
+
+```typescript
+// Function parameters and return types
+function calculate(a: number, b: number): number {
+  return a + b;
+}
+
+// Arrow functions
+const add = (a: number, b: number): number => a + b;
+
+// Variables with non-obvious types
+const config: AppConfig = loadConfig();
+```
+
+### Infer When Obvious
+
+```typescript
+// Type is obvious from literal
+const name = 'John';        // string inferred
+const count = 42;           // number inferred
+const isActive = true;      // boolean inferred
+
+// Type is obvious from function return
+const items = getItems();   // Item[] inferred if typed
+```
+
+## No `any` Type
+
+### Use `unknown` Instead
+
+```typescript
+// ❌ Bad
+function process(data: any) {
+  return data.value;
+}
+
+// ✅ Good
+function process(data: unknown): string {
+  if (isValidData(data)) {
+    return data.value;
+  }
+  throw new Error('Invalid data');
+}
+
+function isValidData(data: unknown): data is { value: string } {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'value' in data &&
+    typeof (data as { value: unknown }).value === 'string'
+  );
+}
+```
+
+### Error Handling
+
+```typescript
+// ❌ Bad
+catch (error: any) {
+  console.log(error.message);
+}
+
+// ✅ Good
+catch (error: unknown) {
+  if (error instanceof Error) {
+    console.log(error.message);
+  } else {
+    console.log('Unknown error');
+  }
+}
+```
+
+## Generics
+
+### Use Generics for Flexibility
+
+```typescript
+// Generic function
+function first<T>(items: T[]): T | undefined {
+  return items[0];
+}
+
+// Generic interface
+interface Response<T> {
+  data: T;
+  status: number;
+}
+
+// Generic class
+class Store<T> {
+  private items = signal<T[]>([]);
+
+  add(item: T): void {
+    this.items.update(current => [...current, item]);
+  }
+}
+```
+
+### Constrained Generics
+
+```typescript
+interface HasId {
+  id: string;
+}
+
+function findById<T extends HasId>(items: T[], id: string): T | undefined {
+  return items.find(item => item.id === id);
+}
+```
+
+## Interfaces vs Types
+
+### Use Interface for Objects
+
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface UserService {
+  getUser(id: string): User;
+  updateUser(id: string, data: Partial<User>): User;
+}
+```
+
+### Use Type for Unions/Intersections
+
+```typescript
+type Status = 'active' | 'inactive' | 'pending';
+type ID = string | number;
+type UserWithRole = User & { role: string };
+```
+
+## Enums
+
+### Use String Enums
+
+```typescript
+enum TankStatus {
+  FULL = 'FULL',
+  NORMAL = 'NORMAL',
+  LOW = 'LOW',
+  CRITICAL = 'CRITICAL',
+}
+
+// Usage
+if (tank.status === TankStatus.CRITICAL) {
+  alert();
+}
+```
+
+### Consider Union Types
+
+```typescript
+// Alternative to enum
+type TankStatus = 'FULL' | 'NORMAL' | 'LOW' | 'CRITICAL';
+
+// Const object for values
+const TANK_STATUS = {
+  FULL: 'FULL',
+  NORMAL: 'NORMAL',
+  LOW: 'LOW',
+  CRITICAL: 'CRITICAL',
+} as const;
+
+type TankStatus = typeof TANK_STATUS[keyof typeof TANK_STATUS];
+```
+
+## Readonly
+
+### Use Readonly for Immutability
+
+```typescript
+interface Config {
+  readonly apiUrl: string;
+  readonly timeout: number;
+}
+
+// Readonly arrays
+function process(items: readonly Item[]): void {
+  // items.push() would error
+}
+
+// Readonly parameters
+function update(data: Readonly<User>): void {
+  // data.name = 'x' would error
+}
+```
+
+## Nullability
+
+### Explicit Null Checks
+
+```typescript
+// Optional property
+interface User {
+  name: string;
+  avatar?: string;  // string | undefined
+}
+
+// Nullable property
+interface Response {
+  data: User | null;
+  error: string | null;
+}
+
+// Null checks
+function getAvatar(user: User): string {
+  return user.avatar ?? '/default-avatar.png';
+}
+```
+
+### Non-Null Assertion (Avoid)
+
+```typescript
+// ❌ Avoid - hides potential bugs
+const element = document.getElementById('id')!;
+
+// ✅ Better - handle null case
+const element = document.getElementById('id');
+if (!element) {
+  throw new Error('Element not found');
+}
+```
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Interface | PascalCase | `UserProfile` |
+| Type | PascalCase | `ButtonVariant` |
+| Enum | PascalCase | `TankStatus` |
+| Enum Member | SCREAMING_SNAKE | `TANK_STATUS.FULL` |
+| Constant | SCREAMING_SNAKE | `MAX_RETRIES` |
+| Variable | camelCase | `userName` |
+| Function | camelCase | `getUserById` |
+| Class | PascalCase | `AuthService` |
+| Private | underscore prefix optional | `_internalState` |

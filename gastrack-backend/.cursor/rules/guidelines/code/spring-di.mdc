@@ -1,0 +1,113 @@
+---
+description: Spring Dependency Injection patterns
+globs: ["**/*.java"]
+---
+
+# Spring Dependency Injection
+
+## Constructor Injection (OBRIGATORIO)
+
+```java
+@Service
+@RequiredArgsConstructor  // Lombok generates constructor
+public class UserService {
+
+    private final UserRepository userRepository;    // Injected
+    private final PasswordEncoder passwordEncoder;  // Injected
+    private final UserMapper userMapper;            // Injected
+
+    // Business methods use injected dependencies
+}
+```
+
+## Why Constructor Injection?
+
+| Constructor | Field (`@Autowired`) |
+|-------------|---------------------|
+| Immutable (final) | Mutable |
+| Testable (pass mocks) | Requires reflection |
+| Fails fast if missing | Runtime errors |
+| Clear dependencies | Hidden dependencies |
+
+## NUNCA Field Injection
+
+```java
+// PROIBIDO
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;  // Hard to test!
+}
+```
+
+## Testing with Constructor Injection
+
+```java
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @InjectMocks
+    private UserService userService;  // Mocks injected via constructor
+
+    @Test
+    void should_CreateUser_When_ValidRequest() {
+        // Arrange
+        when(userRepository.save(any())).thenReturn(testUser);
+
+        // Act
+        UserResponse result = userService.create(request);
+
+        // Assert
+        assertNotNull(result);
+    }
+}
+```
+
+## Optional Dependencies
+
+```java
+@Service
+public class NotificationService {
+
+    private final EmailService emailService;
+    private final SmsService smsService;  // May be null
+
+    public NotificationService(
+            EmailService emailService,
+            @Autowired(required = false) SmsService smsService) {
+        this.emailService = emailService;
+        this.smsService = smsService;
+    }
+
+    public void notify(User user, String message) {
+        emailService.send(user.getEmail(), message);
+        if (smsService != null) {
+            smsService.send(user.getPhone(), message);
+        }
+    }
+}
+```
+
+## Circular Dependencies
+
+Se encontrar dependencia circular:
+1. Redesenhe - geralmente indica design problem
+2. Use `@Lazy` como ultimo recurso
+
+```java
+// Ultimo recurso - prefira redesenhar
+@Service
+public class ServiceA {
+    private final ServiceB serviceB;
+
+    public ServiceA(@Lazy ServiceB serviceB) {
+        this.serviceB = serviceB;
+    }
+}
+```

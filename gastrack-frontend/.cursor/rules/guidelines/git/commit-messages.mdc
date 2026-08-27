@@ -1,0 +1,116 @@
+---
+description: Git commit message conventions (Conventional Commits)
+---
+
+# Commit Message Guidelines
+
+## Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+## Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `feat` | New feature | `feat(cylinders): add pressure monitoring` |
+| `fix` | Bug fix | `fix(auth): correct token refresh logic` |
+| `refactor` | Code refactoring | `refactor(shared): simplify button variants` |
+| `test` | Add/update tests | `test(orders): add unit tests for service` |
+| `docs` | Documentation | `docs: update README installation` |
+| `style` | Code style (formatting) | `style: apply prettier formatting` |
+| `perf` | Performance improvement | `perf(dashboard): optimize chart rendering` |
+| `chore` | Maintenance tasks | `chore: update dependencies` |
+| `ci` | CI/CD changes | `ci: add e2e test workflow` |
+| `build` | Build system | `build: update angular to v21` |
+
+## Scopes
+
+Use domain or feature name:
+
+| Scope | Usage |
+|-------|-------|
+| `auth` | Authentication feature |
+| `cylinders` | Cylinder management |
+| `customers` | Customer management |
+| `orders` | Order processing |
+| `dashboard` | Dashboard feature |
+| `shared` | Shared components |
+| `core` | Core services |
+| `ui` | UI components |
+
+## Description Rules
+
+1. **Imperative mood**: "add" not "added" or "adding"
+2. **Lowercase**: Start with lowercase letter
+3. **No period**: Don't end with a period
+4. **Max 72 chars**: Keep the first line short
+5. **Present tense**: Describe what the commit does
+
+## Examples
+
+### Good Commits
+
+```
+feat(cylinders): add real-time pressure monitoring
+
+- Implement WebSocket connection for live updates
+- Add pressure change notifications
+- Create TankStatusBadge component
+
+Closes #123
+```
+
+```
+fix(auth): handle expired refresh token correctly
+
+Previously the app would crash when refresh token expired.
+Now it redirects to login with appropriate message.
+```
+
+```
+refactor(shared): extract button variants to CVA
+
+Move button styling logic to class-variance-authority
+for better type safety and maintainability.
+```
+
+### Bad Commits
+
+```
+❌ Fixed bug
+❌ WIP
+❌ Updates
+❌ feat: Add new feature.
+❌ FEAT(AUTH): ADD LOGIN
+```
+
+## Body Guidelines
+
+- Wrap at 72 characters
+- Explain **what** and **why**, not how
+- Use bullet points for multiple changes
+- Reference issues when relevant
+
+## Footer
+
+```
+BREAKING CHANGE: <description>
+
+Closes #123
+Refs #456, #789
+```
+
+## Pre-commit Hooks
+
+The project runs these automatically:
+- Prettier (formatting)
+- ESLint (linting)
+- Commitlint (message format)
+
+If commit fails, fix the issues and try again.

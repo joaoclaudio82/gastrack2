@@ -1,0 +1,193 @@
+---
+description: Core Angular 21 principles and patterns
+---
+
+# Angular 21 Principles
+
+## Zoneless Architecture
+
+Angular 21 runs without Zone.js. Change detection is triggered by:
+- Signal updates
+- Async pipe
+- markForCheck()
+
+```typescript
+// Signals trigger change detection automatically
+readonly data = signal<Data[]>([]);
+
+// Update triggers re-render
+this.data.set(newData);
+```
+
+## Standalone Components
+
+All components must be standalone (no NgModules).
+
+```typescript
+@Component({
+  selector: 'app-my-component',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule],
+  templateUrl: './my-component.component.html',
+})
+export class MyComponent {}
+```
+
+## OnPush Change Detection
+
+All components must use OnPush strategy.
+
+```typescript
+@Component({
+  selector: 'app-my-component',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class MyComponent {}
+```
+
+## Dependency Injection
+
+Use `inject()` function, not constructor injection.
+
+```typescript
+// ✅ Correct
+@Component({...})
+export class MyComponent {
+  private readonly service = inject(MyService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+}
+
+// ❌ Wrong
+@Component({...})
+export class MyComponent {
+  constructor(private service: MyService) {}
+}
+```
+
+## Input/Output Signals
+
+Use signal-based inputs and outputs (Angular 17+).
+
+```typescript
+// Inputs
+readonly name = input<string>();           // Optional
+readonly id = input.required<string>();    // Required
+readonly config = input<Config>({});       // With default
+
+// Outputs
+readonly clicked = output<void>();
+readonly selected = output<Item>();
+
+// Usage in template
+<app-item [name]="name" [id]="item.id" (selected)="onSelect($event)" />
+```
+
+## Component Types
+
+### Smart Components (Containers)
+- Located in `pages/`
+- Inject services
+- Manage state
+- Pass data to dumb components
+
+```typescript
+@Component({
+  selector: 'app-cylinders-list',
+  standalone: true,
+  imports: [OxygenTankCardComponent, TankFiltersComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CylindersListComponent {
+  private readonly service = inject(OxygenTankService);
+
+  readonly tanks = this.service.filteredTanks;
+  readonly isLoading = this.service.isLoading;
+
+  onFilterChange(filters: TankFilters): void {
+    this.service.updateFilters(filters);
+  }
+}
+```
+
+### Dumb Components (Presentational)
+- Located in `components/`
+- Only inputs and outputs
+- No injected services
+- No business logic
+
+```typescript
+@Component({
+  selector: 'app-tank-card',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TankCardComponent {
+  readonly tank = input.required<OxygenTank>();
+  readonly selected = output<OxygenTank>();
+
+  onSelect(): void {
+    this.selected.emit(this.tank());
+  }
+}
+```
+
+## Template Syntax
+
+### Control Flow (Angular 17+)
+
+```html
+<!-- Conditionals -->
+@if (isLoading()) {
+  <app-spinner />
+} @else if (error()) {
+  <app-error [message]="error()" />
+} @else {
+  <app-content [data]="data()" />
+}
+
+<!-- Loops -->
+@for (item of items(); track item.id) {
+  <app-item [data]="item" />
+} @empty {
+  <p>No items found</p>
+}
+
+<!-- Switch -->
+@switch (status()) {
+  @case ('FULL') { <span class="text-green-500">Full</span> }
+  @case ('LOW') { <span class="text-yellow-500">Low</span> }
+  @default { <span>Unknown</span> }
+}
+```
+
+## Routing
+
+### Route Definitions
+
+```typescript
+// feature.routes.ts
+export const FEATURE_ROUTES: Routes = [
+  {
+    path: '',
+    component: FeatureListComponent,
+  },
+  {
+    path: ':id',
+    component: FeatureDetailComponent,
+  },
+];
+```
+
+### Lazy Loading
+
+```typescript
+// app.routes.ts
+{
+  path: 'cylinders',
+  loadChildren: () => import('./features/cylinders/cylinders.routes')
+    .then(m => m.CYLINDERS_ROUTES),
+  canActivate: [authGuard],
+}
+```

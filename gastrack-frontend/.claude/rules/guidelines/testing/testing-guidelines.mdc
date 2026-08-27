@@ -1,0 +1,165 @@
+---
+description: General testing principles and TDD workflow
+---
+
+# Testing Guidelines
+
+## TDD Workflow
+
+### Red-Green-Refactor
+
+1. **RED**: Write a failing test
+2. **GREEN**: Write minimum code to pass
+3. **REFACTOR**: Improve without breaking tests
+
+```typescript
+// 1. RED - Test first
+it('should calculate tank status as CRITICAL when below 10%', () => {
+  const tank = { pressure: 15, capacity: 200 };
+  expect(calculateStatus(tank)).toBe('CRITICAL');
+});
+
+// 2. GREEN - Implement
+function calculateStatus(tank: Tank): TankStatus {
+  const percentage = (tank.pressure / tank.capacity) * 100;
+  if (percentage < 10) return 'CRITICAL';
+  return 'NORMAL';
+}
+
+// 3. REFACTOR - Improve
+function calculateStatus(tank: Tank): TankStatus {
+  const percentage = getPercentage(tank);
+  return getStatusFromPercentage(percentage);
+}
+```
+
+## Test Structure
+
+### AAA Pattern
+
+```typescript
+it('should filter tanks by status', () => {
+  // Arrange
+  const tanks = [
+    { id: '1', status: 'FULL' },
+    { id: '2', status: 'LOW' },
+    { id: '3', status: 'FULL' },
+  ];
+
+  // Act
+  const result = filterByStatus(tanks, 'FULL');
+
+  // Assert
+  expect(result).toHaveLength(2);
+  expect(result.every(t => t.status === 'FULL')).toBe(true);
+});
+```
+
+### Describe/It Naming
+
+```typescript
+describe('OxygenTankService', () => {
+  describe('calculateStatus', () => {
+    it('should return FULL when pressure >= 80%', () => {});
+    it('should return NORMAL when pressure between 30-80%', () => {});
+    it('should return LOW when pressure between 10-30%', () => {});
+    it('should return CRITICAL when pressure < 10%', () => {});
+  });
+
+  describe('updateFilters', () => {
+    it('should merge new filters with existing', () => {});
+    it('should trigger filteredTanks recomputation', () => {});
+  });
+});
+```
+
+## What to Test
+
+### Must Test
+
+- Business logic (services)
+- Utility functions
+- State computations
+- Error handling
+- Edge cases
+
+### Should Test
+
+- Component inputs/outputs
+- User interactions
+- Route guards
+- Interceptors
+
+### Optional
+
+- Simple getters
+- Static templates
+- Third-party library wrappers
+
+## Test Coverage
+
+### Targets
+
+- **Unit tests**: 80% coverage minimum
+- **E2E tests**: Critical user flows
+
+### Coverage Check
+
+```bash
+bun test -- --coverage
+```
+
+## Mocking
+
+### Service Mocks
+
+```typescript
+const mockAuthService = {
+  isAuthenticated: signal(true),
+  currentUser: signal({ id: '1', name: 'Test' }),
+  login: vi.fn(),
+  logout: vi.fn(),
+};
+
+beforeEach(() => {
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: AuthService, useValue: mockAuthService },
+    ],
+  });
+});
+```
+
+### HTTP Mocks
+
+```typescript
+const httpMock = TestBed.inject(HttpTestingController);
+
+it('should load tanks', () => {
+  service.loadTanks();
+
+  const req = httpMock.expectOne('/api/tanks');
+  expect(req.request.method).toBe('GET');
+  req.flush(mockTanks);
+
+  expect(service.tanks()).toEqual(mockTanks);
+});
+```
+
+## Test Quality
+
+### Good Tests
+
+- Test behavior, not implementation
+- One assertion focus per test
+- Independent (no shared state)
+- Deterministic (no random)
+- Fast (< 100ms each)
+
+### Bad Tests
+
+- Testing implementation details
+- Multiple unrelated assertions
+- Dependent on other tests
+- Flaky (sometimes pass/fail)
+- Slow (> 1s)

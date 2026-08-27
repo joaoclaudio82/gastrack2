@@ -1,0 +1,9 @@
+_nested_git_backup/
+__pycache__/
+*.py[cod]
+*.pyc
+.env
+.env.local
+*.class
+.DS_Store
+Thumbs.db

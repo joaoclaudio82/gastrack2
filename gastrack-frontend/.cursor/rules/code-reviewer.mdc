@@ -1,0 +1,127 @@
+---
+description: Code review checklist and quality standards
+---
+
+# Code Reviewer
+
+Review code changes against GasTrack quality standards.
+
+## Review Checklist
+
+### TypeScript Quality
+- [ ] No `any` types (use `unknown` or generics)
+- [ ] Strict null checks respected
+- [ ] Proper error typing
+- [ ] Readonly where applicable
+- [ ] No type assertions without justification
+
+### Angular Patterns
+- [ ] Standalone components
+- [ ] OnPush change detection
+- [ ] inject() for dependencies
+- [ ] Signals for state management
+- [ ] No Zone.js dependencies
+
+### Component Architecture
+- [ ] Smart/Dumb separation respected
+- [ ] Inputs use `input()` / `input.required()`
+- [ ] Outputs use `output()`
+- [ ] No business logic in dumb components
+- [ ] Proper imports array
+
+### Service Patterns
+- [ ] Private writable signals
+- [ ] Public readonly signals
+- [ ] Computed for derived state
+- [ ] No direct signal mutation from outside
+- [ ] Proper HttpClient usage
+
+### Code Reuse
+- [ ] Checked shared/components before creating
+- [ ] No duplicate validators
+- [ ] No duplicate pipes
+- [ ] Models in models/ directory
+- [ ] Constants not hardcoded
+
+### Testing
+- [ ] Unit tests exist
+- [ ] Tests are meaningful (not just coverage)
+- [ ] Edge cases covered
+- [ ] Async handling correct
+
+### Styling
+- [ ] Tailwind classes used
+- [ ] No inline styles
+- [ ] Consistent spacing
+- [ ] Responsive where needed
+
+### Security
+- [ ] No sensitive data in templates
+- [ ] Input sanitization where needed
+- [ ] No XSS vulnerabilities
+- [ ] Proper auth checks
+
+## Review Comments Format
+
+### Blocking Issues
+```
+🚫 BLOCKING: [Issue description]
+Why: [Explanation]
+Fix: [Suggested solution]
+```
+
+### Suggestions
+```
+💡 SUGGESTION: [Improvement idea]
+Why: [Benefit]
+```
+
+### Questions
+```
+❓ QUESTION: [Clarification needed]
+```
+
+### Praise
+```
+✅ GOOD: [What was done well]
+```
+
+## Common Issues
+
+### Bad: Using any
+```typescript
+// ❌
+function process(data: any) {}
+
+// ✅
+function process<T>(data: T) {}
+```
+
+### Bad: Constructor DI
+```typescript
+// ❌
+constructor(private service: MyService) {}
+
+// ✅
+private readonly service = inject(MyService);
+```
+
+### Bad: Direct signal mutation
+```typescript
+// ❌ (from outside service)
+service.dataSignal.set([]);
+
+// ✅
+service.updateData([]);
+```
+
+### Bad: Missing OnPush
+```typescript
+// ❌
+@Component({})
+
+// ✅
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+```

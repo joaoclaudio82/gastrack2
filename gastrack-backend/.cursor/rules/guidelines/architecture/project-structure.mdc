@@ -1,0 +1,94 @@
+---
+description: Project structure and package organization
+globs: ["src/main/java/**/*.java"]
+---
+
+# Project Structure
+
+## Package Layout
+
+```
+com.farukgenc.boilerplate.springboot/
+├── configuration/     # Spring @Configuration classes
+├── controller/        # REST @RestController endpoints
+├── dto/               # Data Transfer Objects
+├── exceptions/        # @ControllerAdvice handlers
+├── mapper/            # MapStruct @Mapper interfaces
+├── model/             # JPA @Entity classes
+├── repository/        # Spring Data @Repository interfaces
+├── security/          # Security components
+│   └── cognito/       # AWS Cognito integration
+├── service/           # Business logic interfaces
+│   └── impl/          # Service implementations
+└── utils/             # Utility classes
+```
+
+## Layer Responsibilities
+
+### Controller Layer
+- HTTP request/response handling
+- Input validation (`@Valid`)
+- Status code mapping
+- NO business logic
+
+```java
+@RestController
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
+public class UserController {
+    private final UserService userService;
+
+    @PostMapping
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(userService.create(req));
+    }
+}
+```
+
+### Service Layer
+- Business logic and rules
+- Transaction management (`@Transactional`)
+- Orchestration between repositories
+- DTO <-> Entity conversion
+
+```java
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    private final UserRepository repository;
+    private final UserMapper mapper;
+
+    @Override
+    @Transactional
+    public UserResponse create(CreateUserRequest request) {
+        User user = mapper.toEntity(request);
+        return mapper.toResponse(repository.save(user));
+    }
+}
+```
+
+### Repository Layer
+- Data access only
+- Custom queries with `@Query`
+- No business logic
+
+```java
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByCognitoSub(String cognitoSub);
+    boolean existsByEmail(String email);
+}
+```
+
+## File Naming
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Entity | `Name.java` | `User.java` |
+| DTO Request | `CreateNameRequest.java` | `CreateUserRequest.java` |
+| DTO Response | `NameResponse.java` | `UserResponse.java` |
+| Service | `NameService.java` | `UserService.java` |
+| Service Impl | `NameServiceImpl.java` | `UserServiceImpl.java` |
+| Controller | `NameController.java` | `UserController.java` |
+| Mapper | `NameMapper.java` | `UserMapper.java` |
+| Repository | `NameRepository.java` | `UserRepository.java` |

@@ -1,0 +1,146 @@
+---
+description: Spring Boot design patterns and best practices
+globs: ["src/main/java/**/*.java"]
+---
+
+# Spring Boot Patterns
+
+## Configuration Pattern
+
+```java
+@Configuration
+@EnableConfigurationProperties(CognitoProperties.class)
+public class CognitoJwtConfiguration {
+
+    @Bean
+    public JwtDecoder jwtDecoder(CognitoProperties props) {
+        return NimbusJwtDecoder.withJwkSetUri(props.getJwkSetUri()).build();
+    }
+}
+```
+
+## Properties Pattern
+
+```java
+@ConfigurationProperties(prefix = "aws.cognito")
+@Validated
+@Getter @Setter
+public class CognitoProperties {
+
+    @NotBlank
+    private String region;
+
+    @NotBlank
+    private String userPoolId;
+
+    @NotBlank
+    private String clientId;
+
+    private String clientSecret;
+}
+```
+
+**application.yml**:
+```yaml
+aws:
+  cognito:
+    region: ${AWS_COGNITO_REGION:us-east-1}
+    user-pool-id: ${AWS_COGNITO_USER_POOL_ID}
+    client-id: ${AWS_COGNITO_CLIENT_ID}
+```
+
+## Exception Handling Pattern
+
+```java
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFound(UserNotFoundException ex) {
+        log.warn("User not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ApiErrorResponse("USER_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationErrorResponse> handleValidation(
+            MethodArgumentNotValidException ex) {
+        List<FieldError> errors = ex.getBindingResult().getFieldErrors()
+            .stream()
+            .map(e -> new FieldError(e.getField(), e.getDefaultMessage()))
+            .toList();
+        return ResponseEntity.badRequest()
+            .body(new ValidationErrorResponse(errors));
+    }
+}
+```
+
+## Auditing Pattern
+
+```java
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+public abstract class BaseAuditEntity {
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+}
+
+// Enable in configuration
+@Configuration
+@EnableJpaAuditing
+public class JpaAuditingConfiguration {}
+```
+
+## Pagination Pattern
+
+```java
+// Controller
+@GetMapping
+public ResponseEntity<PageResponse<UserResponse>> list(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size) {
+    return ResponseEntity.ok(userService.findAll(PageRequest.of(page, size)));
+}
+
+// Service
+public PageResponse<UserResponse> findAll(Pageable pageable) {
+    Page<User> page = repository.findAll(pageable);
+    return pageMapper.toResponse(page.map(mapper::toResponse));
+}
+```
+
+## Filter Pattern (Security)
+
+```java
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtDecoder jwtDecoder;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+
+        String token = extractToken(request);
+        if (token != null) {
+            try {
+                Jwt jwt = jwtDecoder.decode(token);
+                // Set authentication context
+            } catch (JwtException e) {
+                // Handle invalid token
+            }
+        }
+        chain.doFilter(request, response);
+    }
+}
+```

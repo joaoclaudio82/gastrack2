@@ -1,0 +1,113 @@
+---
+description: Test-Driven Development workflow and practices
+globs: ["**/*.java", "**/test/**"]
+---
+
+# TDD Workflow
+
+## Ciclo Red-Green-Refactor
+
+```
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│    ┌───────┐     ┌───────┐     ┌──────────┐    │
+│    │  RED  │ --> │ GREEN │ --> │ REFACTOR │    │
+│    └───────┘     └───────┘     └──────────┘    │
+│        │                             │         │
+│        └─────────────────────────────┘         │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+### 1. RED - Escreva Teste que Falha
+```java
+@Test
+void should_ThrowException_When_UserNotFound() {
+    // Arrange
+    when(repository.findById(99L)).thenReturn(Optional.empty());
+
+    // Act & Assert
+    assertThrows(UserNotFoundException.class,
+        () -> service.findById(99L));
+}
+```
+Run: `mvn test` - DEVE FALHAR
+
+### 2. GREEN - Codigo Minimo para Passar
+```java
+public User findById(Long id) {
+    return repository.findById(id)
+        .orElseThrow(() -> new UserNotFoundException(id));
+}
+```
+Run: `mvn test` - DEVE PASSAR
+
+### 3. REFACTOR - Melhorar Mantendo Verde
+- Extrair metodos
+- Renomear para clareza
+- Remover duplicacao
+- Run: `mvn test` - DEVE CONTINUAR PASSANDO
+
+## Naming Convention
+
+```java
+void should_ExpectedBehavior_When_Condition()
+
+// Exemplos
+void should_ReturnUser_When_ValidIdProvided()
+void should_ThrowException_When_UserNotFound()
+void should_CreateUser_When_ValidRequest()
+void should_Return401_When_InvalidToken()
+```
+
+## Test Structure (AAA)
+
+```java
+@Test
+void should_CreateUser_When_ValidRequest() {
+    // Arrange - Setup
+    CreateUserRequest request = CreateUserRequest.builder()
+        .email("test@example.com")
+        .name("Test User")
+        .build();
+    when(repository.save(any())).thenReturn(testUser);
+
+    // Act - Execute
+    UserResponse result = service.create(request);
+
+    // Assert - Verify
+    assertNotNull(result);
+    assertEquals("test@example.com", result.getEmail());
+    verify(repository).save(any());
+}
+```
+
+## Test Annotations
+
+| Annotation | Uso | Context |
+|------------|-----|---------|
+| `@WebMvcTest(Controller.class)` | Controllers | Web layer only |
+| `@DataJpaTest` | Repositories | JPA + H2 |
+| `@ExtendWith(MockitoExtension.class)` | Services | Unit test |
+| `@SpringBootTest` | Integration | Full context |
+
+## Coverage Requirements
+
+- **80%+** em codigo novo
+- **Excluidos**: DTOs, configs, models, utils, mappers
+- Verificar: `mvn test jacoco:report`
+
+## O Que Testar
+
+### TESTAR
+- Business logic
+- Validation rules
+- Error handling
+- Edge cases
+- Security constraints
+
+### NAO TESTAR
+- Framework code (Spring, Hibernate)
+- Third-party libraries
+- Simple getters/setters
+- Auto-generated code (MapStruct impls)

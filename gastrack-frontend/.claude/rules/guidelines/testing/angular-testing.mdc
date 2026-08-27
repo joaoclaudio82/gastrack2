@@ -1,0 +1,258 @@
+---
+description: Angular-specific testing patterns with Vitest
+---
+
+# Angular Testing Guide
+
+## Setup
+
+### Vitest Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.spec.ts'],
+    setupFiles: ['src/test-setup.ts'],
+  },
+});
+```
+
+### Test Setup
+
+```typescript
+// src/test-setup.ts
+import '@angular/compiler';
+import { getTestBed } from '@angular/core/testing';
+import { BrowserTestingModule } from '@angular/platform-browser/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  { teardown: { destroyAfterEach: true } }
+);
+```
+
+## Service Testing
+
+### Basic Service Test
+
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+
+describe('OxygenTankService', () => {
+  let service: OxygenTankService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        OxygenTankService,
+      ],
+    });
+
+    service = TestBed.inject(OxygenTankService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should load tanks', () => {
+    const mockTanks = [{ id: '1', status: 'FULL' }];
+
+    service.loadTanks();
+
+    const req = httpMock.expectOne('/api/tanks');
+    req.flush(mockTanks);
+
+    expect(service.tanks()).toEqual(mockTanks);
+    expect(service.isLoading()).toBe(false);
+  });
+
+  it('should handle load error', () => {
+    service.loadTanks();
+
+    const req = httpMock.expectOne('/api/tanks');
+    req.error(new ErrorEvent('Network error'));
+
+    expect(service.error()).toBeTruthy();
+    expect(service.isLoading()).toBe(false);
+  });
+});
+```
+
+### Signal Testing
+
+```typescript
+describe('Signal-based service', () => {
+  let service: DataService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [DataService],
+    });
+    service = TestBed.inject(DataService);
+  });
+
+  it('should update filters', () => {
+    service.updateFilters({ search: 'test' });
+
+    expect(service.filters().search).toBe('test');
+  });
+
+  it('should compute filtered data', () => {
+    // Set initial data (might need internal access or load)
+    service.updateFilters({ status: 'FULL' });
+
+    expect(service.filteredData().every(d => d.status === 'FULL')).toBe(true);
+  });
+});
+```
+
+## Component Testing
+
+### Smart Component
+
+```typescript
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+
+describe('CylindersListComponent', () => {
+  let component: CylindersListComponent;
+  let fixture: ComponentFixture<CylindersListComponent>;
+  let mockService: Partial<OxygenTankService>;
+
+  beforeEach(async () => {
+    mockService = {
+      filteredTanks: signal([]),
+      isLoading: signal(false),
+      filters: signal({ search: '', status: null }),
+      updateFilters: vi.fn(),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [CylindersListComponent],
+      providers: [
+        { provide: OxygenTankService, useValue: mockService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CylindersListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should show loading spinner when loading', () => {
+    (mockService.isLoading as ReturnType<typeof signal>).set(true);
+    fixture.detectChanges();
+
+    const spinner = fixture.nativeElement.querySelector('app-loading-spinner');
+    expect(spinner).toBeTruthy();
+  });
+
+  it('should display tanks when loaded', () => {
+    (mockService.filteredTanks as ReturnType<typeof signal>).set([
+      { id: '1', device_id: 'esp32-001', status: 'FULL' },
+    ]);
+    fixture.detectChanges();
+
+    const cards = fixture.nativeElement.querySelectorAll('app-oxygen-tank-card');
+    expect(cards.length).toBe(1);
+  });
+});
+```
+
+### Dumb Component
+
+```typescript
+describe('TankStatusBadgeComponent', () => {
+  let component: TankStatusBadgeComponent;
+  let fixture: ComponentFixture<TankStatusBadgeComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TankStatusBadgeComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(TankStatusBadgeComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('should display FULL status with green color', () => {
+    fixture.componentRef.setInput('status', 'FULL');
+    fixture.detectChanges();
+
+    const badge = fixture.nativeElement.querySelector('.badge');
+    expect(badge.textContent).toContain('FULL');
+    expect(badge.classList).toContain('bg-green-500');
+  });
+
+  it('should display CRITICAL status with red color', () => {
+    fixture.componentRef.setInput('status', 'CRITICAL');
+    fixture.detectChanges();
+
+    const badge = fixture.nativeElement.querySelector('.badge');
+    expect(badge.classList).toContain('bg-red-500');
+  });
+});
+```
+
+## E2E Testing (Playwright)
+
+### Basic E2E Test
+
+```typescript
+// e2e/cylinders/cylinders-list.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Cylinders List', () => {
+  test.beforeEach(async ({ page }) => {
+    // Login
+    await page.goto('/auth/login');
+    await page.getByLabel('Email').fill('test@example.com');
+    await page.getByLabel('Password').fill('password');
+    await page.getByRole('button', { name: /login/i }).click();
+    await expect(page).toHaveURL(/dashboard/);
+
+    // Navigate
+    await page.goto('/cylinders');
+  });
+
+  test('should display cylinder list', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /cilindros/i })).toBeVisible();
+    await expect(page.locator('[data-testid="tank-card"]')).toHaveCount.greaterThan(0);
+  });
+
+  test('should filter by status', async ({ page }) => {
+    await page.getByLabel('Status').selectOption('CRITICAL');
+
+    const cards = page.locator('[data-testid="tank-card"]');
+    await expect(cards.first().locator('.status-badge')).toContainText('CRITICAL');
+  });
+});
+```
+
+### Selector Priority
+
+1. `getByRole()` - Accessibility-first
+2. `getByLabel()` - Form inputs
+3. `getByText()` - Visible text
+4. `getByTestId()` - Last resort
+
+```typescript
+// Preferred
+await page.getByRole('button', { name: /submit/i }).click();
+await page.getByLabel('Email').fill('test@example.com');
+
+// When needed
+await page.getByTestId('tank-card-1').click();
+```

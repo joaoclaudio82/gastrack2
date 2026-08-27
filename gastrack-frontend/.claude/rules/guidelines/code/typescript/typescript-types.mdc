@@ -1,0 +1,283 @@
+---
+description: Type definitions and modeling best practices
+---
+
+# TypeScript Types Guide
+
+## Model Definition
+
+### Entity Interface
+
+```typescript
+// models/user.model.ts
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+  roles: UserRole[];
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+}
+```
+
+### Request/Response Types
+
+```typescript
+// Request DTOs
+export interface CreateUserRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+}
+
+export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+}
+
+// Response types
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+```
+
+## Utility Types
+
+### Partial - All Optional
+
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// All fields optional
+type UpdateUser = Partial<User>;
+// { id?: string; name?: string; email?: string; }
+```
+
+### Pick - Select Fields
+
+```typescript
+// Only specific fields
+type UserCredentials = Pick<User, 'email' | 'password'>;
+// { email: string; password: string; }
+```
+
+### Omit - Exclude Fields
+
+```typescript
+// Exclude fields
+type CreateUser = Omit<User, 'id' | 'createdAt'>;
+// { name: string; email: string; ... }
+```
+
+### Required - All Required
+
+```typescript
+interface Config {
+  host?: string;
+  port?: number;
+}
+
+// All required
+type RequiredConfig = Required<Config>;
+// { host: string; port: number; }
+```
+
+### Readonly - Immutable
+
+```typescript
+type ImmutableUser = Readonly<User>;
+// All fields readonly
+```
+
+## Discriminated Unions
+
+### State Pattern
+
+```typescript
+type LoadingState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: string };
+
+// Usage
+function render(state: LoadingState<User[]>) {
+  switch (state.status) {
+    case 'idle':
+      return <IdleView />;
+    case 'loading':
+      return <Spinner />;
+    case 'success':
+      return <UserList users={state.data} />;
+    case 'error':
+      return <Error message={state.error} />;
+  }
+}
+```
+
+### Action Pattern
+
+```typescript
+type UserAction =
+  | { type: 'ADD'; user: User }
+  | { type: 'UPDATE'; id: string; changes: Partial<User> }
+  | { type: 'DELETE'; id: string };
+
+function reducer(state: User[], action: UserAction): User[] {
+  switch (action.type) {
+    case 'ADD':
+      return [...state, action.user];
+    case 'UPDATE':
+      return state.map(u =>
+        u.id === action.id ? { ...u, ...action.changes } : u
+      );
+    case 'DELETE':
+      return state.filter(u => u.id !== action.id);
+  }
+}
+```
+
+## Type Guards
+
+### typeof Guard
+
+```typescript
+function process(value: string | number): string {
+  if (typeof value === 'string') {
+    return value.toUpperCase();
+  }
+  return value.toFixed(2);
+}
+```
+
+### instanceof Guard
+
+```typescript
+function handleError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Unknown error';
+}
+```
+
+### Custom Type Guard
+
+```typescript
+interface User {
+  id: string;
+  name: string;
+}
+
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    typeof (value as User).id === 'string' &&
+    typeof (value as User).name === 'string'
+  );
+}
+
+// Usage
+function process(data: unknown) {
+  if (isUser(data)) {
+    console.log(data.name); // TypeScript knows it's User
+  }
+}
+```
+
+### in Guard
+
+```typescript
+type Admin = { role: 'admin'; permissions: string[] };
+type User = { role: 'user'; email: string };
+
+function getAccess(person: Admin | User): string[] {
+  if ('permissions' in person) {
+    return person.permissions; // Admin
+  }
+  return ['read']; // User
+}
+```
+
+## Branded Types
+
+### Type-safe IDs
+
+```typescript
+// Brand type
+type Brand<T, B> = T & { __brand: B };
+
+// Branded IDs
+type UserId = Brand<string, 'UserId'>;
+type OrderId = Brand<string, 'OrderId'>;
+
+// Factory functions
+function createUserId(id: string): UserId {
+  return id as UserId;
+}
+
+function createOrderId(id: string): OrderId {
+  return id as OrderId;
+}
+
+// Type-safe functions
+function getUser(id: UserId): User { ... }
+function getOrder(id: OrderId): Order { ... }
+
+// Usage
+const userId = createUserId('user-123');
+const orderId = createOrderId('order-456');
+
+getUser(userId);    // ✅ OK
+getUser(orderId);   // ❌ Error: Type 'OrderId' not assignable to 'UserId'
+```
+
+## Template Literal Types
+
+```typescript
+type EventName = `on${Capitalize<string>}`;
+// "onClick", "onSubmit", "onLoad", etc.
+
+type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type Endpoint = `/${string}`;
+type Route = `${HTTPMethod} ${Endpoint}`;
+// "GET /users", "POST /orders", etc.
+```
+
+## Conditional Types
+
+```typescript
+// Extract array element type
+type ElementOf<T> = T extends (infer E)[] ? E : never;
+
+type StringArrayElement = ElementOf<string[]>; // string
+
+// Exclude null/undefined
+type NonNullable<T> = T extends null | undefined ? never : T;
+```

@@ -1,0 +1,130 @@
+<app-breadcrumb />
+
+<div class="py-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl sm:text-2xl font-bold text-foreground">Empresas</h1>
+      <p class="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie as empresas do sistema</p>
+    </div>
+    <app-button
+      variant="primary"
+      (buttonClick)="openForm()"
+      class="w-full sm:w-auto sm:flex-shrink-0"
+    >
+      <svg
+        class="w-4 h-4 mr-2"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Nova Empresa
+    </app-button>
+  </div>
+
+  @if (companyService.companies().length === 0 && !companyService.isLoading()) {
+    <app-empty-state
+      title="Nenhuma empresa cadastrada"
+      description="Cadastre a primeira empresa do sistema."
+      action="Cadastrar Empresa"
+      (actionClick)="openForm()"
+    />
+  } @else {
+    <app-data-table>
+      <ng-container data-table-head>
+        <tr>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Nome
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Slug
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            CNPJ
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Email
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Status
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Criado em
+          </th>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+          >
+            Ações
+          </th>
+        </tr>
+      </ng-container>
+
+      <ng-container data-table-body>
+        @for (company of companyService.companies(); track company.id) {
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm font-medium text-foreground">{{ company.name }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm text-muted-foreground font-mono">{{ company.slug }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm text-muted-foreground">{{ company.cnpj || '-' }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm text-muted-foreground">{{ company.email || '-' }}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              @if (company.active) {
+                <app-badge variant="success">Ativa</app-badge>
+              } @else {
+                <app-badge variant="default">Inativa</app-badge>
+              }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm text-muted-foreground">
+                {{ company.createdAt | date: 'dd/MM/yyyy' }}
+              </span>
+            </td>
+            <td class="px-3 sm:px-6 py-4">
+              <div class="flex justify-start">
+                <app-action-menu [items]="rowActions(company)" />
+              </div>
+            </td>
+          </tr>
+        }
+      </ng-container>
+
+      <app-data-table-footer
+        data-table-footer
+        [pagination]="companyService.pagination()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      />
+    </app-data-table>
+  }
+</div>
+
+<app-company-form
+  [isOpen]="isFormOpen()"
+  [company]="selectedCompany()"
+  [isLoading]="isSaving()"
+  (submitted)="onFormSubmit($event)"
+  (closed)="closeForm()"
+/>

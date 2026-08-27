@@ -1,0 +1,29 @@
+## Docker Compose - PostgreSQL only (recomendado para mvn + profile dev na maquina)
+## Defaults alinhados a application-dev.yml (appdb / postgres / example na porta 5432)
+## Run: docker compose -f docker-compose.db.yml up -d
+
+name: gastrack-db
+
+services:
+
+  postgres:
+    container_name: gastrack-postgres-local
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME:-appdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example}
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB_NAME:-appdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_local_data:
+    driver: local

@@ -1,0 +1,201 @@
+---
+description: Signal-based state management patterns
+---
+
+# Angular Signals Guide
+
+## Basic Signals
+
+### Creating Signals
+
+```typescript
+import { signal, computed, effect } from '@angular/core';
+
+// Writable signal
+const count = signal(0);
+
+// Read value
+console.log(count()); // 0
+
+// Update value
+count.set(5);
+count.update(v => v + 1);
+```
+
+### Computed Signals
+
+Derived values that auto-update when dependencies change.
+
+```typescript
+const items = signal<Item[]>([]);
+const filter = signal('');
+
+// Automatically recomputes when items or filter changes
+const filteredItems = computed(() => {
+  const f = filter().toLowerCase();
+  return items().filter(item =>
+    item.name.toLowerCase().includes(f)
+  );
+});
+
+// Computed with multiple signals
+const statistics = computed(() => ({
+  total: items().length,
+  filtered: filteredItems().length,
+}));
+```
+
+### Effects
+
+Side effects that run when signals change.
+
+```typescript
+effect(() => {
+  // Runs when items() changes
+  console.log('Items updated:', items().length);
+});
+
+// Cleanup
+effect((onCleanup) => {
+  const subscription = source.subscribe(...);
+  onCleanup(() => subscription.unsubscribe());
+});
+```
+
+## Service Pattern
+
+### State Management Service
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class DataService {
+  private readonly http = inject(HttpClient);
+
+  // Private writable signals
+  private readonly dataSignal = signal<Data[]>([]);
+  private readonly isLoadingSignal = signal(false);
+  private readonly errorSignal = signal<string | null>(null);
+  private readonly filtersSignal = signal<Filters>({ search: '' });
+
+  // Public readonly signals
+  readonly data = this.dataSignal.asReadonly();
+  readonly isLoading = this.isLoadingSignal.asReadonly();
+  readonly error = this.errorSignal.asReadonly();
+  readonly filters = this.filtersSignal.asReadonly();
+
+  // Computed values
+  readonly filteredData = computed(() => {
+    const data = this.dataSignal();
+    const filters = this.filtersSignal();
+
+    return data.filter(item =>
+      item.name.includes(filters.search)
+    );
+  });
+
+  readonly hasData = computed(() => this.dataSignal().length > 0);
+  readonly dataCount = computed(() => this.dataSignal().length);
+
+  // Methods
+  load(): void {
+    this.isLoadingSignal.set(true);
+    this.errorSignal.set(null);
+
+    this.http.get<Data[]>('/api/data').subscribe({
+      next: (data) => {
+        this.dataSignal.set(data);
+        this.isLoadingSignal.set(false);
+      },
+      error: (err) => {
+        this.errorSignal.set(err.message);
+        this.isLoadingSignal.set(false);
+      },
+    });
+  }
+
+  updateFilters(filters: Partial<Filters>): void {
+    this.filtersSignal.update(current => ({
+      ...current,
+      ...filters,
+    }));
+  }
+
+  addItem(item: Data): void {
+    this.dataSignal.update(current => [...current, item]);
+  }
+
+  removeItem(id: string): void {
+    this.dataSignal.update(current =>
+      current.filter(item => item.id !== id)
+    );
+  }
+}
+```
+
+## Component Pattern
+
+### Using Signals in Components
+
+```typescript
+@Component({
+  selector: 'app-data-list',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (isLoading()) {
+      <app-spinner />
+    } @else {
+      @for (item of filteredData(); track item.id) {
+        <app-item [data]="item" (delete)="onDelete($event)" />
+      } @empty {
+        <p>No data found</p>
+      }
+    }
+  `,
+})
+export class DataListComponent {
+  private readonly service = inject(DataService);
+
+  readonly filteredData = this.service.filteredData;
+  readonly isLoading = this.service.isLoading;
+
+  onDelete(id: string): void {
+    this.service.removeItem(id);
+  }
+}
+```
+
+## Best Practices
+
+### DO
+- Use `asReadonly()` for public signals
+- Use `computed()` for derived state
+- Use `effect()` sparingly (prefer computed)
+- Colocate related signals in services
+
+### DON'T
+- Mutate signal values directly
+- Expose writable signals publicly
+- Create circular dependencies in computed
+- Use effects for data transformation
+
+### Signal vs Observable
+
+```typescript
+// Use Signals for:
+// - UI state
+// - Form values
+// - Filters
+// - Local component state
+
+// Use Observables for:
+// - HTTP requests
+// - WebSocket streams
+// - Complex async operations
+
+// Convert Observable to Signal
+readonly data = toSignal(this.http.get<Data[]>('/api/data'));
+
+// Convert Signal to Observable (rare)
+const data$ = toObservable(this.dataSignal);
+```

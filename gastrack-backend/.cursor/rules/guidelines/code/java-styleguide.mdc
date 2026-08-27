@@ -1,0 +1,151 @@
+---
+description: Java code style and conventions
+globs: ["**/*.java"]
+---
+
+# Java Style Guide
+
+## Naming Conventions
+
+### Classes
+- **PascalCase**, nouns
+- Suffix by type: `UserService`, `UserController`, `UserMapper`
+
+### Methods
+- **camelCase**, verbs
+- `findById()`, `createUser()`, `isValid()`
+
+### Variables
+- **camelCase**, descriptive
+- Boolean prefix: `isActive`, `hasPermission`, `canDelete`
+
+### Constants
+- **UPPER_SNAKE_CASE**
+- `MAX_RETRY_COUNT`, `DEFAULT_PAGE_SIZE`
+
+## Code Structure
+
+### Method Size
+- **Max 20 lines** per method
+- Extract helper methods if larger
+
+### Parameters
+- **Max 3 parameters**
+- Use object for more: `createUser(CreateUserRequest request)`
+
+### Return Early
+```java
+// GOOD
+public User findById(Long id) {
+    if (id == null) {
+        throw new IllegalArgumentException("ID required");
+    }
+    return repository.findById(id)
+        .orElseThrow(() -> new UserNotFoundException(id));
+}
+
+// AVOID - nested conditionals
+public User findById(Long id) {
+    if (id != null) {
+        Optional<User> user = repository.findById(id);
+        if (user.isPresent()) {
+            return user.get();
+        } else {
+            throw new UserNotFoundException(id);
+        }
+    } else {
+        throw new IllegalArgumentException("ID required");
+    }
+}
+```
+
+## Formatting
+
+### Indentation
+- 4 spaces (no tabs)
+
+### Line Length
+- Max 120 characters
+
+### Imports
+- No wildcard imports
+- Order: java -> javax -> third-party -> project
+
+### Braces
+```java
+// Same line opening brace
+if (condition) {
+    doSomething();
+} else {
+    doOther();
+}
+
+// Single statement - still use braces
+if (condition) {
+    return early;
+}
+```
+
+## Documentation
+
+### When to Comment
+- **WHY**, not what
+- Complex business rules
+- Non-obvious algorithms
+
+### JavaDoc
+```java
+/**
+ * Applies promotional discount for eligible users.
+ * Eligibility: premium users with 5+ purchases in last 30 days.
+ *
+ * @param user the user to check
+ * @return discount percentage (0-100)
+ * @throws UserNotFoundException if user not found
+ */
+public int calculateDiscount(User user) { }
+```
+
+## Clean Code Principles
+
+### Single Responsibility
+```java
+// BAD - multiple concerns
+class UserService {
+    void saveUser(User user) { }
+    void sendEmail(String email) { }  // Not user concern
+}
+
+// GOOD - separated
+class UserService {
+    void saveUser(User user) { }
+}
+class EmailService {
+    void sendEmail(String email) { }
+}
+```
+
+### DRY - Don't Repeat Yourself
+```java
+// BAD - duplicated validation
+void validateUser(User user) {
+    if (user.getEmail() == null) throw new ValidationException("Email required");
+}
+void validateAdmin(Admin admin) {
+    if (admin.getEmail() == null) throw new ValidationException("Email required");
+}
+
+// GOOD - extracted
+void validateEmail(String email) {
+    if (email == null) throw new ValidationException("Email required");
+}
+```
+
+### Avoid Magic Values
+```java
+// BAD
+if (user.getRole() == 1) { }
+
+// GOOD
+if (user.getRole() == UserRole.ADMIN) { }
+```

@@ -1,0 +1,153 @@
+---
+description: Project folder structure and DDD organization
+---
+
+# Project Structure Guidelines
+
+## Root Structure
+
+```
+src/app/
+├── core/           # Singleton services, guards, interceptors
+├── shared/         # Reusable components, pipes, directives
+├── layouts/        # Page layouts (auth, dashboard)
+├── features/       # Feature modules (lazy loaded)
+├── models/         # TypeScript interfaces
+└── environments/   # Environment configs
+```
+
+## Core Module
+
+Singleton services that should be imported once in app config.
+
+```
+core/
+├── auth/
+│   ├── guards/
+│   │   ├── auth.guard.ts      # Protect authenticated routes
+│   │   ├── guest.guard.ts     # Protect public routes
+│   │   ├── role.guard.ts      # Role-based access
+│   │   └── index.ts
+│   ├── interceptors/
+│   │   ├── jwt.interceptor.ts # Add auth header
+│   │   ├── error.interceptor.ts
+│   │   └── index.ts
+│   ├── services/
+│   │   ├── auth.service.ts
+│   │   ├── token.service.ts
+│   │   └── index.ts
+│   └── index.ts
+├── services/
+│   ├── config.service.ts
+│   ├── notification.service.ts
+│   ├── storage.service.ts
+│   └── index.ts
+├── providers/
+│   └── core.providers.ts
+└── index.ts
+```
+
+## Shared Module
+
+Reusable components with no business logic.
+
+```
+shared/
+├── components/
+│   └── ui/
+│       ├── button/
+│       │   ├── button.component.ts
+│       │   └── index.ts
+│       ├── input/
+│       ├── card/
+│       ├── modal/
+│       ├── toast/
+│       ├── select/
+│       ├── loading-spinner/
+│       └── index.ts
+├── directives/
+│   ├── click-outside.directive.ts
+│   ├── has-role.directive.ts
+│   ├── auto-focus.directive.ts
+│   └── index.ts
+├── pipes/
+│   ├── truncate.pipe.ts
+│   ├── safe-html.pipe.ts
+│   └── index.ts
+├── validators/
+│   ├── custom-validators.ts
+│   └── index.ts
+└── index.ts
+```
+
+## Feature Module
+
+Domain-specific functionality, lazy loaded.
+
+```
+features/cylinders/
+├── components/          # Presentational components
+│   ├── oxygen-tank-card/
+│   │   ├── oxygen-tank-card.component.ts
+│   │   └── oxygen-tank-card.component.html
+│   ├── tank-status-badge/
+│   └── tank-filters/
+├── pages/               # Smart components (containers)
+│   └── cylinders-list/
+│       ├── cylinders-list.component.ts
+│       └── cylinders-list.component.html
+├── services/            # Domain services
+│   └── oxygen-tank.service.ts
+├── cylinders.routes.ts  # Route definitions
+└── AGENTS.md            # Domain documentation
+```
+
+## Models
+
+TypeScript interfaces, organized by domain.
+
+```
+models/
+├── auth.model.ts        # User, LoginRequest, etc.
+├── oxygen-tank.model.ts # OxygenTank, TankStatus, etc.
+├── customer.model.ts    # Customer, Contract, etc.
+├── api-response.model.ts
+└── index.ts
+```
+
+## Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Component | `kebab-case.component.ts` | `tank-card.component.ts` |
+| Service | `kebab-case.service.ts` | `oxygen-tank.service.ts` |
+| Guard | `kebab-case.guard.ts` | `auth.guard.ts` |
+| Pipe | `kebab-case.pipe.ts` | `truncate.pipe.ts` |
+| Directive | `kebab-case.directive.ts` | `click-outside.directive.ts` |
+| Model | `kebab-case.model.ts` | `oxygen-tank.model.ts` |
+| Routes | `feature.routes.ts` | `cylinders.routes.ts` |
+
+## Barrel Files (index.ts)
+
+Every directory should have an index.ts that exports public API:
+
+```typescript
+// shared/components/ui/index.ts
+export { ButtonComponent } from './button/button.component';
+export { InputComponent } from './input/input.component';
+export { CardComponent } from './card/card.component';
+```
+
+## Import Paths
+
+Always use path aliases:
+
+```typescript
+// Good
+import { AuthService } from '@core/auth';
+import { ButtonComponent } from '@shared/components/ui';
+import { OxygenTank } from '@models/oxygen-tank.model';
+
+// Bad
+import { AuthService } from '../../../core/auth';
+```

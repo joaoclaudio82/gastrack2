@@ -1,0 +1,69 @@
+## Docker Compose for PRODUCTION (with AWS Cognito)
+## Run: docker compose up -d
+
+services:
+
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME:-appdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Database
+      POSTGRES_DB_SERVER_ADDRESS: postgres
+      POSTGRES_DB_SERVER_PORT: 5432
+      POSTGRES_DB_NAME: ${POSTGRES_DB_NAME:-appdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example}
+      # AWS Cognito (required for production)
+      AWS_COGNITO_REGION: ${AWS_COGNITO_REGION}
+      AWS_COGNITO_USER_POOL_ID: ${AWS_COGNITO_USER_POOL_ID}
+      AWS_COGNITO_CLIENT_ID: ${AWS_COGNITO_CLIENT_ID}
+      AWS_COGNITO_CLIENT_SECRET: ${AWS_COGNITO_CLIENT_SECRET}
+      AWS_COGNITO_DOMAIN: ${AWS_COGNITO_DOMAIN}
+      # AWS Credentials (required for AdminCreateUser API in invitations)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      # AWS DynamoDB
+      AWS_DYNAMODB_REGION: ${AWS_DYNAMODB_REGION:-us-east-1}
+      AWS_DYNAMODB_TABLE_NAME: ${AWS_DYNAMODB_TABLE_NAME:-pressure-monitoring-data-prod}
+      # AWS IoT Core
+      AWS_IOT_REGION: ${AWS_IOT_REGION:-us-east-1}
+      AWS_IOT_POLICY_NAME: ${AWS_IOT_POLICY_NAME:-gastrack-esp-policy}
+      # Device Provisioning
+      DEVICE_API_KEY: ${DEVICE_API_KEY:-change-me-in-production}
+      # CORS Configuration
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4200,http://localhost:8080}
+    healthcheck:
+      test: "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health/readiness || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local

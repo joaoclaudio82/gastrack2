@@ -1,0 +1,217 @@
+---
+description: Service creation and state management patterns
+---
+
+# Angular Service Guidelines
+
+## Service Structure
+
+### Basic Service Template
+
+```typescript
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, catchError, tap, throwError } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class FeatureService {
+  private readonly http = inject(HttpClient);
+  private readonly config = inject(ConfigService);
+
+  // Private writable signals
+  private readonly dataSignal = signal<Data[]>([]);
+  private readonly isLoadingSignal = signal(false);
+  private readonly errorSignal = signal<string | null>(null);
+
+  // Public readonly signals
+  readonly data = this.dataSignal.asReadonly();
+  readonly isLoading = this.isLoadingSignal.asReadonly();
+  readonly error = this.errorSignal.asReadonly();
+
+  // Computed values
+  readonly hasData = computed(() => this.dataSignal().length > 0);
+  readonly dataCount = computed(() => this.dataSignal().length);
+
+  // CRUD Operations
+  loadAll(): void {
+    this.isLoadingSignal.set(true);
+    this.errorSignal.set(null);
+
+    this.http.get<Data[]>(`${this.config.apiUrl}/data`).subscribe({
+      next: (data) => {
+        this.dataSignal.set(data);
+        this.isLoadingSignal.set(false);
+      },
+      error: (err: unknown) => {
+        this.handleError(err);
+        this.isLoadingSignal.set(false);
+      },
+    });
+  }
+
+  create(item: CreateDataDto): Observable<Data> {
+    return this.http.post<Data>(`${this.config.apiUrl}/data`, item).pipe(
+      tap((created) => {
+        this.dataSignal.update((current) => [...current, created]);
+      }),
+      catchError((err: unknown) => {
+        this.handleError(err);
+        return throwError(() => err);
+      }),
+    );
+  }
+
+  update(id: string, item: UpdateDataDto): Observable<Data> {
+    return this.http.put<Data>(`${this.config.apiUrl}/data/${id}`, item).pipe(
+      tap((updated) => {
+        this.dataSignal.update((current) =>
+          current.map((d) => (d.id === id ? updated : d)),
+        );
+      }),
+    );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.config.apiUrl}/data/${id}`).pipe(
+      tap(() => {
+        this.dataSignal.update((current) => current.filter((d) => d.id !== id));
+      }),
+    );
+  }
+
+  // Error handling
+  private handleError(error: unknown): void {
+    if (error instanceof Error) {
+      this.errorSignal.set(error.message);
+    } else {
+      this.errorSignal.set('An unexpected error occurred');
+    }
+  }
+
+  clearError(): void {
+    this.errorSignal.set(null);
+  }
+}
+```
+
+## Service with Filters
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class CylinderService {
+  private readonly dataSignal = signal<Cylinder[]>([]);
+  private readonly filtersSignal = signal<Filters>({
+    search: '',
+    status: null,
+  });
+
+  readonly filters = this.filtersSignal.asReadonly();
+
+  readonly filteredData = computed(() => {
+    const data = this.dataSignal();
+    const filters = this.filtersSignal();
+
+    return data.filter((item) => {
+      // Search filter
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        if (!item.name.toLowerCase().includes(search)) {
+          return false;
+        }
+      }
+
+      // Status filter
+      if (filters.status && item.status !== filters.status) {
+        return false;
+      }
+
+      return true;
+    });
+  });
+
+  updateFilters(filters: Partial<Filters>): void {
+    this.filtersSignal.update((current) => ({
+      ...current,
+      ...filters,
+    }));
+  }
+
+  clearFilters(): void {
+    this.filtersSignal.set({ search: '', status: null });
+  }
+}
+```
+
+## Service with Selection
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class SelectableService {
+  private readonly itemsSignal = signal<Item[]>([]);
+  private readonly selectedIdsSignal = signal<Set<string>>(new Set());
+
+  readonly selectedIds = this.selectedIdsSignal.asReadonly();
+
+  readonly selectedItems = computed(() => {
+    const items = this.itemsSignal();
+    const ids = this.selectedIdsSignal();
+    return items.filter((item) => ids.has(item.id));
+  });
+
+  readonly hasSelection = computed(() => this.selectedIdsSignal().size > 0);
+
+  toggleSelection(id: string): void {
+    this.selectedIdsSignal.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  selectAll(): void {
+    const ids = this.itemsSignal().map((item) => item.id);
+    this.selectedIdsSignal.set(new Set(ids));
+  }
+
+  clearSelection(): void {
+    this.selectedIdsSignal.set(new Set());
+  }
+}
+```
+
+## Service Patterns
+
+### Singleton Services
+```typescript
+@Injectable({ providedIn: 'root' }) // Available app-wide
+```
+
+### Feature Services
+```typescript
+@Injectable() // Provide in component/route
+```
+
+### Usage in Components
+
+```typescript
+@Component({
+  providers: [FeatureSpecificService], // Scoped to component
+})
+export class MyComponent {
+  private readonly globalService = inject(GlobalService);
+  private readonly featureService = inject(FeatureSpecificService);
+}
+```
+
+## Best Practices
+
+1. **Keep services focused** - One responsibility per service
+2. **Use signals for state** - Not BehaviorSubject
+3. **Expose readonly signals** - Use asReadonly()
+4. **Computed for derived** - Don't duplicate state
+5. **Handle errors consistently** - Use error signal
+6. **Type everything** - No any types

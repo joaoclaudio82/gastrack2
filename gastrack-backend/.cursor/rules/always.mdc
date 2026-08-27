@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+
+# GasTrack Backend - AI Context
+
+## Leitura Obrigatoria
+1. `/AGENTS.md` - source of truth (estrutura, comandos, convencoes)
+
+## Stack Principal
+- **Spring Boot 4.0** + Java 21
+- **PostgreSQL** + Flyway migrations
+- **AWS Cognito** para autenticacao
+- **MapStruct** para mapeamento
+- **JUnit 5 + Mockito** para testes
+
+## Skills (carregue incrementalmente)
+`.agent/skills/` contem referencias detalhadas:
+- **spring-boot/** - REST, services, JPA, security
+- **java-patterns/** - SOLID, clean code
+- **testing/** - JUnit 5, Mockito, TDD
+
+**Workflow**: Leia SKILL.md primeiro (index), depois reference especifica.
+
+## TDD Obrigatorio
+Todo codigo novo segue Red-Green-Refactor:
+1. Escreva teste que falha (`should_X_When_Y`)
+2. Implemente minimo para passar
+3. Refatore mantendo verde
+
+## Regras Criticas
+- Constructor injection (nunca `@Autowired` em fields)
+- DTOs para API (nunca expor entities)
+- `@Transactional` em services, nao controllers
+- 80%+ coverage em codigo novo

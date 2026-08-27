@@ -1,0 +1,16 @@
+{
+  "project_name": "GasTrack",
+  "created": "2026-03-12",
+  "codebase_type": "existing",
+  "implementation_target": "existing",
+  "design_scope": "full",
+  "system_strategy": "refactor",
+  "platform": ["web"],
+  "accessibility": "WCAG 2.2 AA",
+  "theme_support": ["light", "dark"],
+  "framework": "angular-21",
+  "styling": "tailwind-css-4",
+  "color_space": "oklch",
+  "current_font": "Inter",
+  "density": "moderate-high"
+}

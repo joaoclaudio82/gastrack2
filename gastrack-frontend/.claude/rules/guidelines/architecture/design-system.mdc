@@ -1,0 +1,106 @@
+---
+description: Design system tokens, colors, and typography standards
+---
+
+# Design System Guidelines
+
+## Color Palette
+
+### Primary Colors
+```css
+--color-primary: #2563eb;       /* blue-600 - Main actions */
+--color-primary-hover: #1d4ed8; /* blue-700 - Hover state */
+--color-primary-light: #dbeafe; /* blue-100 - Backgrounds */
+```
+
+### Status Colors
+```css
+--color-success: #10b981;    /* emerald-500 - Success states */
+--color-warning: #f59e0b;    /* amber-500 - Warning states */
+--color-danger: #ef4444;     /* red-500 - Error/danger states */
+--color-info: #3b82f6;       /* blue-500 - Info states */
+```
+
+### Tank Status Colors
+```css
+--tank-full: #10b981;     /* emerald-500 - >= 80% */
+--tank-normal: #3b82f6;   /* blue-500 - 30-80% */
+--tank-low: #f59e0b;      /* amber-500 - 10-30% */
+--tank-critical: #ef4444; /* red-500 - < 10% */
+--tank-empty: #6b7280;    /* gray-500 - < 5 bar */
+```
+
+### Neutral Colors
+```css
+--color-background: #f9fafb;  /* gray-50 */
+--color-surface: #ffffff;     /* white */
+--color-border: #e5e7eb;      /* gray-200 */
+--color-text: #111827;        /* gray-900 */
+--color-text-muted: #6b7280;  /* gray-500 */
+```
+
+## Typography
+
+### Font Family
+```css
+font-family: Inter, system-ui, sans-serif;
+```
+
+### Font Sizes
+| Name | Size | Line Height | Usage |
+|------|------|-------------|-------|
+| xs | 0.75rem | 1rem | Labels, captions |
+| sm | 0.875rem | 1.25rem | Secondary text |
+| base | 1rem | 1.5rem | Body text |
+| lg | 1.125rem | 1.75rem | Subheadings |
+| xl | 1.25rem | 1.75rem | Section titles |
+| 2xl | 1.5rem | 2rem | Page titles |
+
+## Spacing Scale
+
+```css
+--space-1: 0.25rem;  /* 4px */
+--space-2: 0.5rem;   /* 8px */
+--space-3: 0.75rem;  /* 12px */
+--space-4: 1rem;     /* 16px */
+--space-5: 1.25rem;  /* 20px */
+--space-6: 1.5rem;   /* 24px */
+--space-8: 2rem;     /* 32px */
+```
+
+## Border Radius
+
+```css
+--radius-sm: 0.25rem;  /* 4px - Buttons, inputs */
+--radius-md: 0.375rem; /* 6px - Cards, modals */
+--radius-lg: 0.5rem;   /* 8px - Larger containers */
+--radius-full: 9999px; /* Pills, avatars */
+```
+
+## Shadows
+
+```css
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+```
+
+## Component Variants
+
+### Button Variants
+- `primary`: Blue background, white text
+- `secondary`: Gray background, dark text
+- `danger`: Red background, white text
+- `outline`: Border only, no background
+- `ghost`: No background, no border
+
+### Button Sizes
+- `sm`: h-8, text-sm, px-3
+- `md`: h-10, text-base, px-4
+- `lg`: h-12, text-lg, px-6
+
+### Input States
+- Default: gray border
+- Focus: blue border + ring
+- Error: red border
+- Disabled: gray background

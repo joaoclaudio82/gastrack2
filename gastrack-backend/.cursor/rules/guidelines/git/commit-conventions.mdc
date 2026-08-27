@@ -1,0 +1,102 @@
+---
+description: Git commit message and workflow conventions
+globs: ["**/*"]
+---
+
+# Git Conventions
+
+## Branch Naming
+
+```
+feature/description     # Nova feature
+bugfix/description      # Correcao de bug
+hotfix/description      # Fix urgente em producao
+refactor/description    # Refatoracao
+test/description        # Adicao de testes
+docs/description        # Documentacao
+```
+
+### Exemplos
+```
+feature/cognito-password-reset
+bugfix/null-pointer-user-service
+refactor/extract-validation-logic
+test/add-cognito-service-tests
+```
+
+## Commit Messages
+
+### Formato
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Types
+| Type | Descricao |
+|------|-----------|
+| `feat` | Nova feature |
+| `fix` | Correcao de bug |
+| `test` | Adicao/correcao de testes |
+| `docs` | Documentacao |
+| `refactor` | Refatoracao (sem mudar comportamento) |
+| `style` | Formatacao (sem mudar logica) |
+| `perf` | Melhoria de performance |
+| `chore` | Manutencao (deps, configs) |
+| `ci` | CI/CD changes |
+
+### Exemplos
+```bash
+feat: Add user password reset functionality
+
+fix: Resolve null pointer exception in UserService
+
+test: Add unit tests for CognitoService
+
+docs: Update API documentation for auth endpoints
+
+refactor: Extract validation logic to separate class
+
+chore: Update Spring Boot to 4.0.0
+```
+
+## Workflow
+
+### 1. Criar Branch
+```bash
+git checkout -b feature/new-feature
+```
+
+### 2. Desenvolver (TDD!)
+- Escrever testes primeiro
+- Implementar feature
+- Garantir que testes passam
+
+### 3. Commit
+```bash
+git add .
+git commit -m "feat: implement user registration"
+```
+
+### 4. Push
+```bash
+git push origin feature/new-feature
+```
+
+### 5. Pull Request
+- Descricao clara
+- Referenciar issues relacionadas
+- Solicitar code review
+
+## Pre-Merge Checklist
+
+- [ ] Todos os testes passam (`mvn test`)
+- [ ] Coverage >= 80%
+- [ ] Sem warnings de compilacao
+- [ ] Codigo segue style guide
+- [ ] Commit messages semanticos
+- [ ] Documentacao atualizada
+- [ ] Sem dados sensiveis no codigo

@@ -1,0 +1,86 @@
+---
+description: Workflow orchestrator for complex multi-step tasks
+---
+
+# Task Orchestrator
+
+Coordinates complex tasks that span multiple domains or require sequential steps.
+
+## Workflow
+
+### 1. Analyze Request
+- Identify all affected domains
+- List required changes
+- Determine dependencies
+
+### 2. Plan Execution
+```
+Step 1: [Domain A] - Create model
+Step 2: [Domain A] - Create service
+Step 3: [Domain B] - Create component
+Step 4: [Shared] - Update exports
+```
+
+### 3. Execute Sequentially
+- Complete each step fully
+- Verify before proceeding
+- Handle errors gracefully
+
+### 4. Verify Integration
+- Run related tests
+- Check imports/exports
+- Validate functionality
+
+## Task Types
+
+### Feature Implementation
+1. Read domain AGENTS.md
+2. Create/update models
+3. Create/update services
+4. Create/update components
+5. Update routes if needed
+6. Write tests
+7. Verify with `bun run ci:all`
+
+### Bug Fix
+1. Reproduce the issue
+2. Write failing test
+3. Identify root cause
+4. Implement fix
+5. Verify test passes
+6. Check for regressions
+
+### Refactoring
+1. Understand current implementation
+2. Write characterization tests
+3. Plan refactoring steps
+4. Execute incrementally
+5. Verify tests still pass
+
+## Cross-Domain Changes
+
+When changes span multiple domains:
+
+1. **Map Dependencies**
+   ```
+   Domain A (auth) ──depends on──> Core (tokens)
+   Domain B (cylinders) ──uses──> Shared (components)
+   ```
+
+2. **Order by Dependency**
+   - Core/Shared first
+   - Then dependent domains
+   - Finally integration points
+
+3. **Update Exports**
+   - Check index.ts barrel files
+   - Update imports in consumers
+
+## Validation Checklist
+
+- [ ] All affected files updated
+- [ ] Imports/exports correct
+- [ ] No circular dependencies
+- [ ] Tests cover changes
+- [ ] Lint passes
+- [ ] Build succeeds

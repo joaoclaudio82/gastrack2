@@ -1,0 +1,133 @@
+DETECÇÃO NÃO SUPERVISIONADA DE ANOMALIAS EM SÉRIES TEMPORAIS DE PRESSÃO PARA MONITORAMENTO DE SISTEMAS DE GÁS: ESTUDO COMPUTACIONAL CONTROLADO NO CONTEXTO GASTRACK
+UNSUPERVISED ANOMALY DETECTION IN PRESSURE TIME SERIES FOR GAS-SYSTEM MONITORING: A CONTROLLED COMPUTATIONAL STUDY IN THE GASTRACK CONTEXT
+João Cláudio Nunes Carvalho
+RESUMO
+O estudo avalia métodos não supervisionados para detecção de comportamento anômalo em séries temporais de pressão no contexto de sistemas de gás monitorados por Internet das Coisas. A motivação decorre da dificuldade de distinguir, a partir de um único limiar, mudanças legítimas de consumo, falhas de sensor e eventos que podem exigir investigação operacional. Foi construído um experimento computacional controlado com 5.000 janelas normais para treinamento e 5.000 janelas para teste, igualmente divididas entre operação normal e anomalias sintéticas dos tipos queda abrupta, deriva, ruído excessivo, sensor travado e picos. A partir de atributos temporais de tendência, dispersão, variação e planicidade, foram comparados regra estatística robusta, Isolation Forest, Local Outlier Factor e One-Class SVM. O Local Outlier Factor apresentou o melhor desempenho global, com precisão de 0,9903, recall de 0,9788, F1-score de 0,9845 e AUC de 0,9969. O estudo também evidencia que anomalia não deve ser automaticamente interpretada como vazamento, pois padrões semelhantes podem resultar de falha instrumental ou alteração operacional. Conclui-se que a detecção não supervisionada é uma camada promissora de triagem, condicionada à validação com eventos reais e à classificação posterior da causa.
+Palavras-chave: Detecção de anomalias; Séries temporais; Internet das Coisas; Sensores de pressão; Aprendizado de máquina.
+ABSTRACT
+This study evaluates unsupervised methods for detecting anomalous behavior in pressure time series in the context of gas systems monitored through the Internet of Things. The motivation arises from the difficulty of distinguishing, using a single threshold, legitimate consumption changes, sensor failures, and events that may require operational investigation. A controlled computational experiment was built with 5,000 normal windows for training and 5,000 windows for testing, equally divided between normal operation and synthetic anomalies comprising sudden drops, drift, excessive noise, stuck sensors, and spikes. Temporal features related to trend, dispersion, variation, and flatness were used to compare a robust statistical rule, Isolation Forest, Local Outlier Factor, and One-Class SVM. Local Outlier Factor achieved the best overall performance, with precision of 0.9903, recall of 0.9788, F1-score of 0.9845, and AUC of 0.9969. The study also emphasizes that an anomaly should not be automatically interpreted as a gas leak, because similar patterns may originate from instrumentation faults or legitimate operational changes. Unsupervised detection is therefore a promising screening layer, provided that it is validated with real events and followed by causal classification.
+Keywords: Anomaly detection; Time series; Internet of Things; Pressure sensors; Machine learning.
+1. INTRODUÇÃO
+Sistemas de monitoramento baseados em Internet das Coisas produzem séries temporais em volume e frequência incompatíveis com inspeção manual contínua. Em uma aplicação de gás, cada dispositivo pode registrar milhares de leituras de pressão por dia, tornando necessário distinguir automaticamente comportamento esperado de situações que merecem atenção. O desafio não é apenas detectar valores altos ou baixos, mas reconhecer mudanças no padrão temporal, como quedas abruptas, deriva, ruído anormal, travamento do sensor ou picos isolados.
+A literatura de segurança de gás mostra que aprendizado de máquina tem sido aplicado tanto à identificação de vazamentos quanto ao diagnóstico de falhas de sensores. Yuan et al. (2025) analisaram dados IoT de monitoramento urbano e utilizaram engenharia de atributos temporais para classificar eventos de vazamento, obtendo recall de 92,86% com árvore de decisão. Tan et al. (2022) investigaram falhas em sensores de sistemas de monitoramento de gás e relataram elevada acurácia de diagnóstico ao combinar métodos probabilísticos. Esses estudos evidenciam que o próprio sistema de medição pode produzir anomalias que não correspondem a um vazamento físico.
+Em dispositivos de borda, abordagens TinyML também têm sido exploradas para detectar gases e situações anômalas localmente. Tsoukas et al. (2023) apresentam um dispositivo de detecção baseado em TinyML, enquanto El Barkani et al. (2024) demonstram modelos compactos para classificação de vazamentos em hardware com recursos limitados. Embora tais abordagens sejam supervisionadas e utilizem sensores distintos, elas reforçam a relevância de decisões rápidas e próximas da fonte de dados.
+No GasTrack, a telemetria de pressão é adquirida por dispositivos ESP32 e armazenada para visualização e análise. A aplicação já possui regras de nível crítico e mecanismos de alerta. Entretanto, um alerta baseado exclusivamente em limiar responde a uma pergunta limitada: a pressão está abaixo de um valor definido? Uma camada de detecção de anomalias busca responder a outra questão: o comportamento recente difere significativamente do padrão normal esperado para aquele sinal?
+A distinção é fundamental porque uma anomalia estatística não possui, por si só, interpretação causal. Uma queda abrupta pode ser compatível com vazamento, mas também pode refletir aumento intenso de consumo, troca de configuração ou erro de leitura. Da mesma forma, uma sequência praticamente constante pode indicar estabilidade real ou travamento do sensor. Assim, o detector deve funcionar como mecanismo de triagem, produzindo evidência para investigação e não um diagnóstico definitivo.
+A questão de pesquisa é: quais métodos não supervisionados apresentam melhor capacidade de reconhecer diferentes tipos de anomalia em janelas de pressão sem exigir um grande conjunto rotulado de falhas? O objetivo consiste em comparar uma regra estatística robusta, Isolation Forest, Local Outlier Factor e One-Class SVM em um protocolo sintético controlado, avaliando precisão, recall, F1-score, AUC e sensibilidade por tipo de anomalia.
+2. FUNDAMENTAÇÃO TEÓRICA OU REVISÃO DA LITERATURA
+2.1 Anomalias em redes de sensores e sistemas de gás
+Sensores distribuídos podem produzir dados incorretos por falhas físicas, comunicação, envelhecimento, interferência, alimentação ou condições ambientais. Souza et al. (2020), ao estudarem redes de sensores sem fio, ressaltam que a identificação automática de sensores anormais é necessária porque leituras errôneas podem comprometer as decisões posteriores. Em sistemas de gás, essa preocupação possui dimensão adicional de segurança, já que uma leitura incorreta pode tanto ocultar uma condição crítica quanto produzir alarmes falsos.
+Tan et al. (2022) tratam explicitamente a distinção entre dado anormal e tipo de falha do sensor. O estudo mostra que o diagnóstico confiável depende de duas etapas: reconhecer que a observação é incompatível com o padrão esperado e, em seguida, classificar sua causa. Essa separação conceitual orienta o presente trabalho. A saída dos detectores avaliados é apenas um indicador de anormalidade, sem atribuir automaticamente a classe 'vazamento'.
+Yuan et al. (2025) demonstram que eventos de vazamento podem ser reconhecidos em séries IoT quando atributos de forma, volatilidade e tendência são construídos a partir das sequências. O resultado reforça a importância da engenharia de atributos. Em vez de fornecer apenas a pressão atual, uma janela temporal pode ser descrita por inclinação, variância das diferenças, amplitude, mudanças de segunda ordem e proporção de intervalos praticamente constantes.
+2.2 Métodos não supervisionados de detecção
+Métodos não supervisionados são particularmente úteis quando exemplos rotulados de falha são raros ou difíceis de reproduzir com segurança. O treinamento pode utilizar predominantemente dados normais, modelando regiões de alta densidade ou mecanismos de isolamento. Esse paradigma é adequado para uma primeira camada de monitoramento do GasTrack, pois eventos reais de vazamento, falha ou perda de calibração tendem a ser muito menos frequentes que períodos normais.
+O Isolation Forest parte da ideia de que anomalias são mais fáceis de isolar por particionamentos aleatórios do espaço de atributos. Observações raras tendem a alcançar folhas em profundidades menores, gerando escores de anomalia mais altos (Liu; Ting; Zhou, 2008). Sua eficiência e ausência de necessidade de estimar densidades completas favorecem o uso em conjuntos com muitos registros.
+O Local Outlier Factor, proposto por Breunig et al. (2000), compara a densidade local de uma observação com a densidade de seus vizinhos. Essa característica permite identificar pontos que parecem anômalos relativamente ao entorno mesmo quando o conjunto possui regiões de densidade diferente. Em séries temporais transformadas em vetores de atributos, o método pode reconhecer combinações incomuns de tendência e variabilidade.
+A One-Class SVM busca construir uma fronteira que englobe a maior parte das observações normais em um espaço de características transformado por kernel, tratando pontos externos como novidade (Schölkopf et al., 2001). Seu desempenho depende da escala das variáveis e de parâmetros como nu e gamma. Em contrapartida, regras estatísticas robustas podem oferecer maior interpretabilidade ao sinalizar quando uma característica se afasta fortemente da mediana histórica.
+2.3 Detecção de gás na borda e limites da interpretação
+Trabalhos com TinyML mostram que modelos compactos podem executar inferência em dispositivos com recursos limitados. Tsoukas et al. (2023) avaliaram cenários de fumaça e amônia, enquanto El Barkani et al. (2024) compararam arquiteturas convolucionais otimizadas para execução local. Esses estudos ampliam a perspectiva de que uma futura versão do GasTrack possa realizar parte da triagem no próprio dispositivo, reduzindo latência e permitindo atuação mesmo com conectividade instável.
+Entretanto, sensores de concentração de gás, câmeras térmicas e sensores de pressão observam fenômenos distintos. Portanto, resultados de detecção de vazamento obtidos com uma modalidade não podem ser transferidos diretamente para outra. Uma anomalia de pressão é um indício físico-operacional, não uma prova de presença de gás no ambiente. A combinação futura com sensores específicos de concentração pode aumentar a capacidade diagnóstica e reduzir falsos positivos.
+3. METODOLOGIA
+3.1 Arquitetura de referência e unidade de análise
+A arquitetura de referência segue o fluxo sensor–ESP32–telemetria–armazenamento–análise. A unidade de análise foi definida como uma janela de 24 leituras consecutivas, correspondendo a duas horas quando agregada em intervalos de cinco minutos. Cada janela foi convertida em um vetor de atributos antes de ser apresentada aos algoritmos. Essa abordagem reduz o problema de uma série contínua para a classificação de segmentos recentes.
+
+Figura 1: Fluxo lógico para detecção de anomalias em séries de pressão.Fonte: Elaborado pelo autor (2026).
+3.2 Construção do conjunto sintético
+Foram geradas 5.000 janelas normais para treinamento. Cada janela normal foi construída com pressão inicial entre 60 e 145 bar, taxa de queda entre 0,5 e 5 bar por hora, pequena modulação temporal, oscilação periódica de até 1,5 bar e ruído de medição entre 0,15 e 0,80 bar. O conjunto de teste recebeu 2.500 janelas normais independentes e 2.500 janelas anômalas.
+As anomalias foram igualmente distribuídas em cinco mecanismos. A queda abrupta aplica redução persistente entre 7 e 25 bar na segunda metade da janela. A deriva adiciona queda progressivamente crescente. O ruído excessivo aumenta fortemente a variância das leituras. O sensor travado mantém as últimas leituras praticamente constantes. A classe picos introduz de um a três valores extremos positivos ou negativos. A Figura 2 ilustra alguns desses padrões.
+
+Figura 2: Exemplos de comportamento normal e de anomalias sintéticas.Fonte: Elaborado pelo autor (2026).
+A opção por anomalias sintéticas foi metodológica e de segurança. Não foram criados vazamentos físicos nem foram utilizados rótulos inexistentes de produção. Assim, as classes representam mecanismos de alteração do sinal e não causas definitivas. Essa estratégia é apropriada para avaliar a capacidade básica dos algoritmos, mas não substitui testes com eventos reais ou ensaios controlados por equipe especializada.
+3.3 Engenharia de atributos
+Cada janela foi representada por doze atributos: inclinação por regressão, inclinação robusta pela mediana dos pares, desvio-padrão da pressão, desvio-padrão das diferenças, média da variação absoluta, maior variação entre leituras consecutivas, amplitude total, mediana absoluta das diferenças, média da segunda diferença absoluta, proporção de diferenças inferiores a 0,08 bar, amplitude duplicada para controle de estabilidade e mudança líquida entre início e fim. O conjunto busca representar quatro dimensões: tendência, dispersão, abruptividade e planicidade.
+Para Local Outlier Factor e One-Class SVM, os atributos foram padronizados por média e desvio-padrão calculados exclusivamente no conjunto de treinamento. Isolation Forest recebeu os atributos na escala original. A regra robusta utilizou mediana e desvio absoluto mediano, transformando cada atributo em escore robusto e considerando anômala uma janela cujo maior escore ultrapassasse o percentil 99 observado nos dados normais de treinamento.
+3.4 Modelos e protocolo de decisão
+O Isolation Forest foi configurado com 300 árvores e contaminação nominal de 1%. O Local Outlier Factor utilizou 35 vizinhos, modo novelty e contaminação nominal de 1%. A One-Class SVM utilizou kernel RBF, nu igual a 0,01 e gamma automático pela escala. Para todos os métodos, o limiar final foi calibrado para o percentil 99 dos escores produzidos sobre o conjunto normal de treinamento. Dessa forma, os algoritmos foram comparados sob uma taxa nominal semelhante de falso alarme no treinamento.
+3.5 Métricas
+Foram calculadas precisão, recall, F1-score e área sob a curva ROC. A precisão mede a proporção de alertas que correspondem a janelas anômalas no experimento; o recall mede a fração das anomalias detectadas; e o F1-score combina ambos. Como aplicações de segurança podem atribuir custos diferentes a falso negativo e falso positivo, também foi analisado o recall separadamente para cada mecanismo de anomalia.
+4. RESULTADOS E DISCUSSÕES
+4.1 Comparação global dos detectores
+Os resultados globais são apresentados na Tabela 1. O Local Outlier Factor obteve o maior F1-score, 0,9845, associado a precisão de 0,9903 e recall de 0,9788. A regra robusta apresentou desempenho próximo, com F1 de 0,9759, demonstrando que atributos fisicamente interpretáveis e limiares calibrados podem constituir um baseline competitivo. A One-Class SVM atingiu F1 de 0,9729. O Isolation Forest apresentou alta precisão, mas recall de 0,8048, resultando em F1 de 0,8863.
+Método
+Precisão
+Recall
+F1-score
+AUC
+Regra robusta
+0,9877
+0,9644
+0,9759
+0,9976
+Isolation Forest
+0,9863
+0,8048
+0,8863
+0,9795
+Local Outlier Factor
+0,9903
+0,9788
+0,9845
+0,9969
+One-Class SVM
+0,9856
+0,9604
+0,9729
+0,9934
+Tabela 1: Métricas globais de detecção de anomalias.Fonte: Elaborado pelo autor (2026).
+
+Figura 3: F1-score e recall dos métodos avaliados.Fonte: Elaborado pelo autor (2026).
+A alta precisão de todos os métodos está relacionada à calibração pelo percentil 99 em dados normais, que restringe a taxa de falso alarme. A diferença central aparece no recall. Isolation Forest deixou de detectar uma fração relevante das anomalias porque o mecanismo de isolamento responde melhor a vetores globalmente raros do que a alterações que ocupam regiões densas do espaço de atributos.
+O resultado do LOF é coerente com sua natureza local. Uma janela de sensor travado, por exemplo, pode apresentar pressão e inclinação dentro de faixas comuns, mas combinação incomum de baixa variabilidade, elevada proporção de diferenças próximas de zero e mudança líquida reduzida. A comparação da densidade local torna esse padrão mais visível que uma estratégia baseada unicamente em isolamento global.
+4.2 Sensibilidade por mecanismo de anomalia
+A Tabela 2 apresenta o recall de LOF e Isolation Forest para cada mecanismo. Ambos detectaram praticamente todas as quedas abruptas, derivas e picos. A principal divergência ocorreu no sensor travado: LOF detectou 90,2% das janelas, enquanto Isolation Forest reconheceu apenas 7,6%. Esse resultado explica grande parte da diferença de recall global.
+Tipo de anomalia
+Recall LOF
+Recall Isolation Forest
+Queda abrupta
+1,000
+1,000
+Deriva
+1,000
+0,996
+Ruído excessivo
+0,994
+0,960
+Sensor travado
+0,902
+0,076
+Picos
+0,998
+0,992
+Tabela 2: Sensibilidade dos dois métodos em destaque por tipo de anomalia.Fonte: Elaborado pelo autor (2026).
+
+Figura 4: Recall por mecanismo de anomalia para LOF e Isolation Forest.Fonte: Elaborado pelo autor (2026).
+O sensor travado merece atenção porque é um exemplo de anomalia sem valor extremo. Se o dispositivo congela em 92 bar, cada nova leitura pode parecer fisicamente plausível quando analisada isoladamente. A anormalidade emerge da ausência de dinâmica. Esse comportamento reforça a necessidade de atributos temporais e está alinhado ao problema de diagnóstico de sensores discutido por Tan et al. (2022) e Souza et al. (2020).
+Quedas abruptas foram facilmente detectadas no experimento, mas a interpretação causal permanece aberta. Uma queda persistente de 15 bar pode ser compatível com perda de gás, mas também com alteração legítima do processo. Yuan et al. (2025) obtiveram resultados expressivos ao combinar séries de concentração de metano com engenharia de atributos e conhecimento especialista. No GasTrack, confirmação de vazamento exigiria informações complementares, como sensor específico de concentração, vazão ou inspeção operacional.
+4.3 Arquitetura de alertas proposta
+Os resultados sustentam uma arquitetura de alertas em dois níveis. O primeiro permanece baseado em regras determinísticas de segurança e operação, como pressão crítica. O segundo utiliza um detector de anomalias para reconhecer comportamento incomum antes ou independentemente do cruzamento de limiares. Um evento pode, assim, ser classificado como 'pressão crítica', 'comportamento anômalo' ou ambos.
+Para reduzir fadiga de alertas, recomenda-se persistência temporal, cooldown por sensor e agregação de eventos semelhantes. A aplicação GasTrack já utiliza cooldown para transições de nível crítico; princípio análogo pode ser estendido ao escore de anomalia. Em vez de alertar a cada leitura, o sistema deve exigir persistência mínima ou acumular evidência em janelas consecutivas.
+Do ponto de vista de explicabilidade, a regra robusta oferece vantagem importante. Mesmo quando LOF é adotado como detector principal, o alerta pode incluir os atributos que mais se afastaram da referência: 'queda abrupta', 'variabilidade elevada' ou 'sinal sem variação'. Essa camada explicativa aproxima o resultado algorítmico da linguagem operacional e facilita validação por técnicos.
+4.4 Relação com processamento em borda
+A execução local de detecção é uma possibilidade futura. Trabalhos de Tsoukas et al. (2023) e El Barkani et al. (2024) mostram que modelos de aprendizado de máquina podem operar em hardware restrito. Os métodos avaliados neste artigo possuem complexidades diferentes; uma regra robusta ou um detector compacto pode ser executado no ESP32, enquanto modelos que dependem de histórico ampliado e atualização frequente podem permanecer na nuvem.
+Uma arquitetura híbrida pode ser especialmente interessante para o GasTrack: regras básicas de segurança no dispositivo, processamento de janelas e sincronização no backend, e interface de investigação no dashboard. Essa organização reduz a dependência de conectividade para situações simples sem transferir toda a inteligência para o firmware, que possui limitações de memória, atualização e observabilidade.
+4.5 Limitações e ameaças à validade
+A primeira limitação é a geração sintética dos dados. As anomalias foram construídas com mecanismos explícitos e, por isso, podem ser mais separáveis que eventos reais. Métricas como F1 de 0,9845 não devem ser apresentadas como desempenho de produção. Elas caracterizam exclusivamente o benchmark definido neste estudo.
+A segunda limitação é a distribuição balanceada no conjunto de teste. Em operação real, a frequência de anomalias tende a ser muito menor que 50%, e mesmo uma pequena taxa de falso positivo pode gerar grande número de alarmes. A validação de campo deverá, portanto, medir precisão positiva em condições naturalmente desbalanceadas e utilizar métricas temporais, como número de alertas por dispositivo por dia.
+A terceira limitação é a ausência de rótulos causais. A presente metodologia detecta anormalidade do sinal, mas não distingue vazamento, consumo excepcional, falha de válvula ou defeito do sensor. Essa classificação deve ser tratada em pesquisa subsequente e provavelmente exigirá dados multimodais ou registro operacional dos eventos.
+5. CONCLUSÃO/CONSIDERAÇÕES FINAIS
+O estudo mostra que métodos não supervisionados podem reconhecer diferentes padrões anormais em séries temporais de pressão sem exigir, na etapa inicial, um grande conjunto rotulado de falhas. No benchmark sintético, o Local Outlier Factor obteve o melhor desempenho global, com F1-score de 0,9845, enquanto a regra robusta apresentou resultado próximo e maior interpretabilidade.
+A análise por mecanismo revelou que quedas, derivas, ruído e picos foram detectados com alta sensibilidade pelos principais métodos, mas o sensor travado diferenciou fortemente os algoritmos. O LOF reconheceu 90,2% dessas janelas, ao passo que o Isolation Forest detectou 7,6%, evidenciando que diferentes anomalias exigem atributos e noções de vizinhança adequadas.
+A pergunta de pesquisa é respondida no sentido de que detectores baseados em densidade local e atributos temporais constituem candidatos promissores para triagem automática no GasTrack. Entretanto, o termo anomalia deve permanecer semanticamente separado de vazamento. A saída do modelo indica comportamento incomum e deve acionar investigação ou fusão com outros sinais, não uma conclusão causal automática.
+Como próximos passos, recomenda-se registrar eventos operacionais reais, construir uma taxonomia de causas, avaliar os modelos em dados naturalmente desbalanceados e estudar a combinação entre pressão, temperatura, concentração de gás e estados dos equipamentos. Também é relevante comparar processamento em nuvem e borda, considerando latência, consumo de energia e manutenção do firmware.
+A incorporação de uma camada desse tipo amplia o papel do monitoramento: além de mostrar nível e pressão, o sistema passa a reconhecer quando o comportamento do processo se afasta do histórico esperado. Essa capacidade é um passo necessário para transformar telemetria em suporte ativo à confiabilidade e à segurança operacional.
+REFERÊNCIAS BIBLIOGRÁFICAS
+BREUNIG, Markus M.; KRIEGEL, Hans-Peter; NG, Raymond T.; SANDER, Jörg. LOF: Identifying Density-Based Local Outliers. In: ACM SIGMOD INTERNATIONAL CONFERENCE ON MANAGEMENT OF DATA, 2000. Proceedings [...]. New York: ACM, 2000. p. 93-104. DOI: https://doi.org/10.1145/335191.335388.
+EL BARKANI, Majda; BENAMAR, Nabil; TALEI, Hanae; BAGAA, Miloud. Gas Leakage Detection Using Tiny Machine Learning. Electronics, v. 13, n. 23, art. 4768, 2024. DOI: https://doi.org/10.3390/electronics13234768.
+GUBBI, Jayavardhana et al. Internet of Things (IoT): A vision, architectural elements, and future directions. Future Generation Computer Systems, v. 29, n. 7, p. 1645-1660, 2013. DOI: https://doi.org/10.1016/j.future.2013.01.010.
+LIU, Fei Tony; TING, Kai Ming; ZHOU, Zhi-Hua. Isolation Forest. In: IEEE INTERNATIONAL CONFERENCE ON DATA MINING, 8., 2008. Proceedings [...]. Pisa: IEEE, 2008. p. 413-422. DOI: https://doi.org/10.1109/ICDM.2008.17.
+SCHÖLKOPF, Bernhard et al. Estimating the Support of a High-Dimensional Distribution. Neural Computation, v. 13, n. 7, p. 1443-1471, 2001. DOI: https://doi.org/10.1162/089976601750264965.
+SOUZA, Paulo Silas Severo de et al. Detecting abnormal sensors via machine learning: An IoT farming WSN-based architecture case study. Measurement, v. 164, art. 108042, 2020. DOI: https://doi.org/10.1016/j.measurement.2020.108042.
+TAN, Qiong et al. A new sensor fault diagnosis method for gas leakage monitoring based on the naive Bayes and probabilistic neural network classifier. Measurement, v. 194, art. 111037, 2022. DOI: https://doi.org/10.1016/j.measurement.2022.111037.
+TSOUKAS, Vasileios et al. A Gas Leakage Detection Device Based on the Technology of TinyML. Technologies, v. 11, n. 2, art. 45, 2023. DOI: https://doi.org/10.3390/technologies11020045.
+VIEGAS JUNIOR, Daniel Magalhães. Arquiteturas Sensoriais para Manutenção Preditiva Baseada em IoT: uma revisão dos métodos de monitoramento de condição em sistemas hidráulicos industriais. Revista Tópicos, Rio de Janeiro, v. 4, n. 33, p. 1-22, 2026. DOI: https://doi.org/10.70773/revistatopicos/778380239.
+YUAN, Hongyong et al. Real-time detection of urban gas pipeline leakage based on machine learning of IoT time-series data. Measurement, v. 242, part B, art. 115937, 2025. DOI: https://doi.org/10.1016/j.measurement.2024.115937.

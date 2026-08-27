@@ -1,0 +1,136 @@
+---
+alwaysApply: true
+---
+
+# Context Discovery Workflow
+
+## Step 1: Read Global Context
+Before any implementation, read these files in order:
+1. `AGENTS.md` (root) - Project overview, stack, domain map
+2. Domain-specific `AGENTS.md` in `src/app/features/<domain>/AGENTS.md`
+
+## Step 2: Load Skills (If Writing Code)
+For implementation tasks:
+1. Read `SKILL.md` first (never load all references at once)
+2. Find relevant section in SKILL.md
+3. Load ONLY the specific reference needed
+4. Implement, then load next reference if needed
+
+## Step 3: Domain Context
+Navigate to the feature's AGENTS.md for:
+- Component inventory
+- Service signals and methods
+- Business rules
+- Related files
+
+---
+
+# Critical Rules - Angular 21
+
+## NEVER Use `any`
+```typescript
+// PROIBIDO
+function process(data: any) { ... }
+catch (error: any) { ... }
+
+// CORRETO
+function process<T>(data: T) { ... }
+catch (error: unknown) {
+  if (error instanceof Error) { ... }
+}
+```
+
+## Always Use OnPush
+```typescript
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+```
+
+## Always Standalone Components
+```typescript
+@Component({
+  standalone: true,
+  imports: [...],
+})
+```
+
+## Use inject() Not Constructor DI
+```typescript
+// PROIBIDO
+constructor(private service: MyService) {}
+
+// CORRETO
+private readonly service = inject(MyService);
+```
+
+## Use Signals for State
+```typescript
+// Private writable
+private readonly dataSignal = signal<Data[]>([]);
+
+// Public readonly
+readonly data = this.dataSignal.asReadonly();
+
+// Computed
+readonly filtered = computed(() => this.dataSignal().filter(...));
+```
+
+---
+
+# Code Reuse - REQUIRED
+
+Before creating ANY new code, check these locations:
+
+| Need | Check First |
+|------|-------------|
+| UI Components | `src/app/shared/components/ui/` |
+| Validators | `src/app/shared/validators/` |
+| Pipes | `src/app/shared/pipes/` |
+| Directives | `src/app/shared/directives/` |
+| Core Services | `src/app/core/services/` |
+| Auth | `src/app/core/auth/` |
+| Models | `src/app/models/` |
+
+---
+
+# Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Component selector | `app-` + kebab-case | `app-gas-card` |
+| Directive selector | `app` + camelCase | `appHighlight` |
+| Service | PascalCase + Service | `GasService` |
+| Guard | camelCase + Guard | `authGuard` |
+| Model/Interface | PascalCase | `Gas`, `Customer` |
+| File | kebab-case.type.ts | `gas-card.component.ts` |
+
+---
+
+# Import Aliases
+
+```typescript
+import { AuthService } from '@core/auth';
+import { ButtonComponent } from '@shared/components/ui';
+import { Gas } from '@models/gas.model';
+import { environment } from '@env';
+```
+
+---
+
+# Testing
+
+- TDD: Write tests BEFORE implementation
+- Unit: Vitest + jsdom
+- E2E: Playwright
+- Run `bun run ci:all` before PRs
+
+---
+
+# Git Commits
+
+Format: `type(scope): description`
+
+Types: feat, fix, refactor, test, docs, chore
+
+Example: `feat(cylinders): add pressure monitoring`

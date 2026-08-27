@@ -1,0 +1,64 @@
+## Development Profile - Runs WITHOUT AWS Cognito
+## Uses PostgreSQL and Basic Auth
+
+server:
+  http2:
+    enabled: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_DB_SERVER_ADDRESS:localhost}:${POSTGRES_DB_SERVER_PORT:5432}/${POSTGRES_DB_NAME:devdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      pool-name: DevHikariPool
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+springdoc:
+  show-actuator: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+management:
+  endpoint:
+    health:
+      show-details: ALWAYS
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework: INFO
+    org.springframework.security: DEBUG
+    com.gastrack: DEBUG
+
+swagger:
+  contact-name: GasTrack Development
+  contact-mail: dev@gastrack.com.br
+  contact-url: http://localhost:8080
+  app-name: GasTrack Backend (DEV MODE)
+  app-description: "GasTrack Development - Using Basic Auth with environment variables"
+  app-version: 4.0.0-DEV
+  app-license-url: https://www.apache.org/licenses/LICENSE-2.0.html
+  app-license: Apache 2.0
+
+## Development Security Configuration
+## Set these environment variables for dev mode:
+dev:
+  security:
+    admin:
+      username: ${DEV_ADMIN_USERNAME:admin}
+      password: ${DEV_ADMIN_PASSWORD:admin123}
+    user:
+      username: ${DEV_USER_USERNAME:user}
+      password: ${DEV_USER_PASSWORD:user123}

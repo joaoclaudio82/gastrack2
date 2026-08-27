@@ -1,0 +1,58 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - homologacao
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app/backend
+            git pull origin homologacao
+
+            # Create .env file from GitHub Secrets
+            cat > .env << 'EOF'
+            # AWS Cognito Configuration
+            AWS_COGNITO_REGION=${{ secrets.AWS_COGNITO_REGION }}
+            AWS_COGNITO_USER_POOL_ID=${{ secrets.AWS_COGNITO_USER_POOL_ID }}
+            AWS_COGNITO_CLIENT_ID=${{ secrets.AWS_COGNITO_CLIENT_ID }}
+            AWS_COGNITO_CLIENT_SECRET=${{ secrets.AWS_COGNITO_CLIENT_SECRET }}
+            AWS_COGNITO_DOMAIN=${{ secrets.AWS_COGNITO_DOMAIN }}
+
+            # AWS IAM Credentials (for AdminCreateUser API)
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+            # Database Configuration
+            POSTGRES_DB_NAME=${{ secrets.POSTGRES_DB_NAME }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+
+            # CORS Configuration
+            ALLOWED_ORIGINS=${{ secrets.FRONTEND_URL }}
+
+            # AWS DynamoDB Configuration
+            AWS_DYNAMODB_REGION=${{ secrets.AWS_DYNAMODB_REGION }}
+            AWS_DYNAMODB_TABLE_NAME=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}
+
+            # AWS IoT Core Configuration
+            AWS_IOT_REGION=${{ secrets.AWS_IOT_REGION }}
+            AWS_IOT_POLICY_NAME=${{ secrets.AWS_IOT_POLICY_NAME }}
+
+            # Device Provisioning
+            DEVICE_API_KEY=${{ secrets.DEVICE_API_KEY }}
+            EOF
+
+            docker compose down
+            docker compose up -d --build
+            docker system prune -f
